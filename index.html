@@ -12,53 +12,52 @@ body{
   background:#f4f4f8;
   color:#222;
 }
+
 header{
-  background:#6c35d9;
+  background:#4930c8;
   color:white;
-  padding:25px;
   text-align:center;
+  padding:25px;
 }
-.container{
-  max-width:700px;
-  margin:auto;
-  padding:20px;
-}
+
 .card{
   background:white;
+  margin:18px;
   padding:20px;
-  margin-bottom:20px;
   border-radius:15px;
-  box-shadow:0 2px 8px #ccc;
+  box-shadow:0 3px 10px #ddd;
 }
-.balance{
-  font-size:32px;
-  font-weight:bold;
-  color:#6c35d9;
-}
+
 button{
   width:100%;
   padding:14px;
-  margin-top:10px;
   border:0;
   border-radius:10px;
-  background:#5630d6;
+  background:#4930c8;
   color:white;
   font-size:16px;
+  margin-top:10px;
 }
-input,select{
-  width:100%;
-  padding:13px;
-  margin-top:8px;
-  box-sizing:border-box;
-  border:1px solid #ccc;
-  border-radius:8px;
+
+button:disabled{
+  background:#aaa;
 }
-.history-item{
-  padding:10px 0;
-  border-bottom:1px solid #ddd;
+
+.balance{
+  font-size:28px;
+  color:#4930c8;
+  font-weight:bold;
 }
-small{
-  color:#777;
+
+#ptc{
+  display:none;
+}
+
+.timer{
+  font-size:24px;
+  font-weight:bold;
+  text-align:center;
+  margin:15px;
 }
 </style>
 </head>
@@ -66,154 +65,165 @@ small{
 <body>
 
 <header>
-<h1>💜 Lili Faucet</h1>
-<p>Tvoj osobný crypto dashboard</p>
+  <h1>💜 Lili Faucet</h1>
+  <p>Tvoj osobný crypto dashboard</p>
 </header>
 
-<div class="container">
-
 <div class="card">
-<h2>💰 Môj zostatok</h2>
-<div class="balance" id="balance">0 satoshi</div>
-<p>Testovací zostatok</p>
+  <h2>💰 Môj zostatok</h2>
+  <div class="balance" id="balance">0 satoshi</div>
+  <p>Testovací zostatok</p>
 </div>
 
 <div class="card">
-<h2>🚀 Služby</h2>
-<button onclick="testPTC()">▶️ PTC</button>
-<button onclick="testOfferwall()">🧩 Offerwall</button>
-<button onclick="testMinevo()">⛏️ Minevo</button>
-<button onclick="claimFaucet()">🎁 Faucet</button>
+  <h2>🚀 Služby</h2>
+
+  <button onclick="openPTC()">▶️ PTC</button>
+  <button>🧩 Offerwall</button>
+  <button>⛏️ Minevo</button>
+  <button>🎁 Faucet</button>
+</div>
+
+<div class="card" id="ptc">
+
+  <h2>▶️ PTC úloha</h2>
+
+  <p><b>Testovacia úloha</b></p>
+  <p>Počkaj 10 sekúnd a potom si môžeš vyzdvihnúť testovaciu odmenu.</p>
+
+  <div class="timer" id="timer">10 sekúnd</div>
+
+  <button id="startBtn" onclick="startPTC()">
+    ▶️ Spustiť PTC úlohu
+  </button>
+
+  <button id="claimBtn" onclick="claimPTC()" disabled>
+    🎁 Získať +1 test satoshi
+  </button>
+
 </div>
 
 <div class="card">
-<h2>🎁 Faucet</h2>
-<p>Testovacia faucet odmena.</p>
-<button onclick="claimFaucet()">💜 Získať testovaciu odmenu</button>
-<p id="message"></p>
-</div>
-
-<div class="card">
-<h2>💳 Výber</h2>
-
-<label>Mena</label>
-<select id="currency">
-<option>BTC</option>
-<option>USDT</option>
-<option>USDC</option>
-</select>
-
-<label>Suma</label>
-<input id="amount" type="number" placeholder="Zadaj sumu">
-
-<label>Adresa peňaženky</label>
-<input id="wallet" type="text" placeholder="Zadaj adresu peňaženky">
-
-<button onclick="withdraw()">📤 Požiadať o výber</button>
-
-<p id="withdrawMessage"></p>
-</div>
-
-<div class="card">
-<h2>📜 História</h2>
-<div id="history">Zatiaľ žiadne záznamy.</div>
-</div>
-
+  <h2>📜 História</h2>
+  <div id="history">Zatiaľ žiadne záznamy.</div>
 </div>
 
 <script>
 
-let balance = Number(localStorage.getItem("lili_balance")) || 0;
+let balance =
+  Number(localStorage.getItem("lili_balance")) || 0;
 
-const balanceEl = document.getElementById("balance");
-const historyEl = document.getElementById("history");
-const messageEl = document.getElementById("message");
-const withdrawMessageEl = document.getElementById("withdrawMessage");
+let history =
+  localStorage.getItem("lili_history") || "";
+
+const balanceEl =
+  document.getElementById("balance");
+
+const historyEl =
+  document.getElementById("history");
+
+const ptc =
+  document.getElementById("ptc");
+
+const timer =
+  document.getElementById("timer");
+
+const startBtn =
+  document.getElementById("startBtn");
+
+const claimBtn =
+  document.getElementById("claimBtn");
+
+let seconds = 10;
+let countdown;
 
 function updateBalance(){
-  balanceEl.textContent = balance + " satoshi";
-  localStorage.setItem("lili_balance", balance);
+  balanceEl.textContent =
+    balance + " satoshi";
+
+  localStorage.setItem(
+    "lili_balance",
+    balance
+  );
 }
 
-function addHistory(text){
-  const oldHistory = localStorage.getItem("lili_history") || "";
-  const date = new Date().toLocaleString("sk-SK");
-
-  const newEntry =
-    '<div class="history-item">🎁 ' +
-    text +
-    '<br><small>' +
-    date +
-    '</small></div>';
+function updateHistory(){
+  historyEl.innerHTML =
+    history || "Zatiaľ žiadne záznamy.";
 
   localStorage.setItem(
     "lili_history",
-    newEntry + oldHistory
+    history
   );
-
-  historyEl.innerHTML =
-    newEntry + oldHistory;
 }
 
-function claimFaucet(){
+function openPTC(){
+  ptc.style.display = "block";
+  ptc.scrollIntoView({
+    behavior:"smooth"
+  });
+}
+
+function startPTC(){
+
+  seconds = 10;
+
+  startBtn.disabled = true;
+  claimBtn.disabled = true;
+
+  timer.textContent =
+    seconds + " sekúnd";
+
+  countdown = setInterval(function(){
+
+    seconds--;
+
+    timer.textContent =
+      seconds + " sekúnd";
+
+    if(seconds <= 0){
+
+      clearInterval(countdown);
+
+      timer.textContent =
+        "✅ Úloha dokončená";
+
+      claimBtn.disabled = false;
+
+    }
+
+  },1000);
+}
+
+function claimPTC(){
+
   balance += 1;
+
   updateBalance();
 
-  addHistory("Faucet odmena: +1 test satoshi");
+  const date =
+    new Date().toLocaleString("sk-SK");
 
-  messageEl.textContent =
-    "✅ Pridaný 1 testovací satoshi.";
+  history =
+    "▶️ PTC úloha — +1 test satoshi — " +
+    date +
+    "<br>" +
+    history;
+
+  updateHistory();
+
+  claimBtn.disabled = true;
+
+  startBtn.disabled = false;
+
+  timer.textContent =
+    "10 sekúnd";
 }
 
-function testPTC(){
-  messageEl.textContent =
-    "▶️ PTC je zatiaľ v testovacom režime.";
-}
-
-function testOfferwall(){
-  messageEl.textContent =
-    "🧩 Offerwall bude pripojený neskôr.";
-}
-
-function testMinevo(){
-  messageEl.textContent =
-    "⛏️ Minevo bude pripojené neskôr.";
-}
-
-function withdraw(){
-
-  const amount =
-    document.getElementById("amount").value;
-
-  const wallet =
-    document.getElementById("wallet").value;
-
-  const currency =
-    document.getElementById("currency").value;
-
-  if(!amount || !wallet){
-    withdrawMessageEl.textContent =
-      "⚠️ Vyplň sumu aj adresu peňaženky.";
-    return;
-  }
-
-  withdrawMessageEl.textContent =
-    "✅ Testovacia žiadosť bola vytvorená.";
-
-  addHistory(
-    "Testovací výber: " +
-    amount + " " + currency
-  );
-}
-
-const savedHistory =
-  localStorage.getItem("lili_history");
-
-if(savedHistory){
-  historyEl.innerHTML = savedHistory;
-}updateBalance();
+updateBalance();
+updateHistory();
 
 </script>
 
 </body>
-</html>
+  </html>
