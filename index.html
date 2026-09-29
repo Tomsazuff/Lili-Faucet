@@ -1,1 +1,219 @@
-<!DOCTYPE html><html lang="sk"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lili Faucet</title><style>body{margin:0;font-family:Arial,sans-serif;background:#f3f0ff;color:#222}header{background:#6c3cff;color:white;text-align:center;padding:25px 10px}header h1{margin:0}.container{max-width:600px;margin:20px auto;padding:0 15px}.card{background:white;border-radius:15px;padding:20px;margin-bottom:18px;box-shadow:0 3px 12px #0001}.balance{text-align:center}#balance{font-size:34px;font-weight:bold;color:#6c3cff;margin:15px 0}.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{border:0;border-radius:10px;padding:13px;font-size:16px;background:#6c3cff;color:white;cursor:pointer}button:disabled{opacity:.5}#countdown{font-size:22px;font-weight:bold;margin:15px 0}label{display:block;margin:10px 0 5px;font-weight:bold}input,select{display:block;width:100%;box-sizing:border-box;padding:13px;margin-bottom:15px;border:1px solid #ccc;border-radius:9px;font-size:16px}.withdraw-button{width:100%}.history-item{border-bottom:1px solid #eee;padding:8px 0}footer{text-align:center;padding:20px;color:#777;font-size:13px}</style></head><body><header><h1>💜 Lili Faucet</h1><p>Tvoj osobný crypto dashboard</p></header><div class="container"><div class="card balance"><h2>💰 Môj zostatok</h2><div id="balance">0 satoshi</div><p>Testovací zostatok</p></div><div class="card"><h2>🚀 Služby</h2><div class="menu"><button id="ptcButton">▶️ PTC</button><button id="offerButton">🧩 Offerwall</button><button id="minevoButton">⛏️ Minevo</button><button id="faucetButton">🎁 Faucet</button></div></div><div class="card faucet"><h2>🎁 Faucet</h2><p>Testovacia faucet odmena.</p><div id="countdown">Odmena je pripravená!</div><button id="claimButton">💜 Získať testovaciu odmenu</button><p id="message"></p></div><div class="card"><h2>💳 Výber</h2><p>Testovací formulár výberu.</p><label>Mena</label><select id="currency"><option value="BTC">BTC</option><option value="USDC">USDC</option><option value="LTC">LTC</option><option value="DOGE">DOGE</option></select><label>Suma</label><input id="amount" type="number" min="1" placeholder="Zadaj sumu"><label>Adresa peňaženky</label><input id="wallet" type="text" placeholder="Zadaj adresu peňaženky"><button id="withdrawButton" class="withdraw-button">📤 Požiadať o výber</button><p id="withdrawMessage"></p></div><div class="card"><h2>📜 História</h2><div id="history">Zatiaľ žiadne záznamy.</div></div></div><footer>Lili Faucet © 2026<br>Testovacia verzia – výbery neposielajú skutočné peniaze.</footer><script>let balance = Number(localStorage.getItem("lili_balance")) || 0;let history = localStorage.getItem("lili_history") || "";const balanceEl = document.getElementById("balance");const historyEl = document.getElementById("history");const claimButton = document.getElementById("claimButton");const countdownEl = document.getElementById("countdown");const messageEl = document.getElementById("message");function updateBalance(){  balanceEl.textContent = balance + " satoshi";  localStorage.setItem("lili_balance", balance);}function updateHistory(){  historyEl.innerHTML = history || "Zatiaľ žiadne záznamy.";}function addHistory(text){  const date = new Date().toLocaleString("sk-SK");  history =    '<div class="history-item">' +    text +    "<br><small>" +    date +    "</small></div>" +    history;  localStorage.setItem("lili_history", history);  updateHistory();}/* FAUCET */claimButton.addEventListener("click", function(){  balance += 1;  updateBalance();  addHistory("🎁 Faucet odmena: +1 test satoshi");  claimButton.disabled = true;  let seconds = 60;  countdownEl.textContent = seconds + " sekúnd";  messageEl.textContent = "✅ Pridaný 1 testovací satoshi.";  const timer = setInterval(function(){    seconds--;    countdownEl.textContent = seconds + " sekúnd";    if(seconds <= 0){      clearInterval(timer);claimButton.disabled = false;      countdownEl.textContent = "Odmena je pripravená!";      messageEl.textContent = "Môžeš skúsiť ďalšiu testovaciu odmenu.";    }  },1000);});/* VÝBER */document.getElementById("withdrawButton").addEventListener("click", function(){  const currency =    document.getElementById("currency").value;  const amount =    document.getElementById("amount").value;  const wallet =    document.getElementById("wallet").value.trim();  const result =    document.getElementById("withdrawMessage");  if(amount === "" || wallet === ""){    result.textContent =      "⚠️ Vyplň sumu aj adresu peňaženky.";    return;  }  if(Number(amount) <= 0){    result.textContent =      "⚠️ Zadaj platnú sumu.";    return;  }  result.textContent =    "✅ Testovacia žiadosť bola vytvorená.";  addHistory(    "📤 Testovací výber: " +    amount + " " + currency  );});/* MENU */document.getElementById("ptcButton").onclick = function(){  alert("▶️ PTC bude čoskoro pripojené.");};document.getElementById("offerButton").onclick = function(){  alert("🧩 Offerwall bude čoskoro pripojený.");};document.getElementById("minevoButton").onclick = function(){  alert("⛏️ Minevo bude čoskoro pripojené.");};document.getElementById("faucetButton").onclick = function(){  document.querySelector(".faucet").scrollIntoView({    behavior:"smooth"  });};/* SPUSTENIE */updateBalance();updateHistory();</script></body></html>
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lili Faucet</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f4f4f8;
+  color:#222;
+}
+header{
+  background:#6c35d9;
+  color:white;
+  padding:25px;
+  text-align:center;
+}
+.container{
+  max-width:700px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:white;
+  padding:20px;
+  margin-bottom:20px;
+  border-radius:15px;
+  box-shadow:0 2px 8px #ccc;
+}
+.balance{
+  font-size:32px;
+  font-weight:bold;
+  color:#6c35d9;
+}
+button{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:0;
+  border-radius:10px;
+  background:#5630d6;
+  color:white;
+  font-size:16px;
+}
+input,select{
+  width:100%;
+  padding:13px;
+  margin-top:8px;
+  box-sizing:border-box;
+  border:1px solid #ccc;
+  border-radius:8px;
+}
+.history-item{
+  padding:10px 0;
+  border-bottom:1px solid #ddd;
+}
+small{
+  color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>💜 Lili Faucet</h1>
+<p>Tvoj osobný crypto dashboard</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+<h2>💰 Môj zostatok</h2>
+<div class="balance" id="balance">0 satoshi</div>
+<p>Testovací zostatok</p>
+</div>
+
+<div class="card">
+<h2>🚀 Služby</h2>
+<button onclick="testPTC()">▶️ PTC</button>
+<button onclick="testOfferwall()">🧩 Offerwall</button>
+<button onclick="testMinevo()">⛏️ Minevo</button>
+<button onclick="claimFaucet()">🎁 Faucet</button>
+</div>
+
+<div class="card">
+<h2>🎁 Faucet</h2>
+<p>Testovacia faucet odmena.</p>
+<button onclick="claimFaucet()">💜 Získať testovaciu odmenu</button>
+<p id="message"></p>
+</div>
+
+<div class="card">
+<h2>💳 Výber</h2>
+
+<label>Mena</label>
+<select id="currency">
+<option>BTC</option>
+<option>USDT</option>
+<option>USDC</option>
+</select>
+
+<label>Suma</label>
+<input id="amount" type="number" placeholder="Zadaj sumu">
+
+<label>Adresa peňaženky</label>
+<input id="wallet" type="text" placeholder="Zadaj adresu peňaženky">
+
+<button onclick="withdraw()">📤 Požiadať o výber</button>
+
+<p id="withdrawMessage"></p>
+</div>
+
+<div class="card">
+<h2>📜 História</h2>
+<div id="history">Zatiaľ žiadne záznamy.</div>
+</div>
+
+</div>
+
+<script>
+
+let balance = Number(localStorage.getItem("lili_balance")) || 0;
+
+const balanceEl = document.getElementById("balance");
+const historyEl = document.getElementById("history");
+const messageEl = document.getElementById("message");
+const withdrawMessageEl = document.getElementById("withdrawMessage");
+
+function updateBalance(){
+  balanceEl.textContent = balance + " satoshi";
+  localStorage.setItem("lili_balance", balance);
+}
+
+function addHistory(text){
+  const oldHistory = localStorage.getItem("lili_history") || "";
+  const date = new Date().toLocaleString("sk-SK");
+
+  const newEntry =
+    '<div class="history-item">🎁 ' +
+    text +
+    '<br><small>' +
+    date +
+    '</small></div>';
+
+  localStorage.setItem(
+    "lili_history",
+    newEntry + oldHistory
+  );
+
+  historyEl.innerHTML =
+    newEntry + oldHistory;
+}
+
+function claimFaucet(){
+  balance += 1;
+  updateBalance();
+
+  addHistory("Faucet odmena: +1 test satoshi");
+
+  messageEl.textContent =
+    "✅ Pridaný 1 testovací satoshi.";
+}
+
+function testPTC(){
+  messageEl.textContent =
+    "▶️ PTC je zatiaľ v testovacom režime.";
+}
+
+function testOfferwall(){
+  messageEl.textContent =
+    "🧩 Offerwall bude pripojený neskôr.";
+}
+
+function testMinevo(){
+  messageEl.textContent =
+    "⛏️ Minevo bude pripojené neskôr.";
+}
+
+function withdraw(){
+
+  const amount =
+    document.getElementById("amount").value;
+
+  const wallet =
+    document.getElementById("wallet").value;
+
+  const currency =
+    document.getElementById("currency").value;
+
+  if(!amount || !wallet){
+    withdrawMessageEl.textContent =
+      "⚠️ Vyplň sumu aj adresu peňaženky.";
+    return;
+  }
+
+  withdrawMessageEl.textContent =
+    "✅ Testovacia žiadosť bola vytvorená.";
+
+  addHistory(
+    "Testovací výber: " +
+    amount + " " + currency
+  );
+}
+
+const savedHistory =
+  localStorage.getItem("lili_history");
+
+if(savedHistory){
+  historyEl.innerHTML = savedHistory;
+}updateBalance();
+
+</script>
+
+</body>
+</html>
