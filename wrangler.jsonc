@@ -1,0 +1,12 @@
+{
+  "name": "ancient-mud-7b85",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-30",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "lili-faucet-db",
+      "database_id": "1e6adbee-2904-4934-8a99-e3327a0329c4"
+    }
+  ]
+}
