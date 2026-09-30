@@ -1,41 +1,44 @@
 const PTC_BANK_SHARE = 0.50;
 const PTC_MINING_SHARE = 0.50;
 
-// Zatiaľ 0, pretože skutočný výnos z ťažby musí byť krytý reálnym príjmom.
-const MINING_DAILY_RATE = 0;
+const MINING_RATES = {
+  1: 0.0067,
+  5: 0.0333,
+  10: 0.08,
+  20: 0.1667,
+  30: 0.2667
+};
+
+const ALLOWED_DAYS = [1, 5, 10, 20, 30];
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), {
     status,
     headers: {
-      "content-type": "application/json; charset=UTF-8",
-      "access-control-allow-origin": "*",
-      "access-control-allow-methods": "GET,POST,OPTIONS",
-      "access-control-allow-headers": "content-type, authorization"
+      "Content-Type": "application/json; charset=UTF-8",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
     }
   });
 }
 
-async function bodyJson(request) {
-  try {
-    return await request.json();
-  } catch {
-    return {};
-  }
-}
-
-function isoNow() {
+function now() {
   return new Date().toISOString();
 }
 
-function daysBetween(a, b) {
+function rateFor(days) {
+  return MINING_RATES[Number(days)] || 0;
+}
+
+function elapsedDays(start, end) {
   return Math.max(
     0,
-    (new Date(b) - new Date(a)) / 86400000
+    (new Date(end).getTime() - new Date(start).getTime()) / 86400000
   );
 }
 
-async function schema(db) {
+async function createTables(db) {
   await db.batch([
     db.prepare(
       "CREATE TABLE IF NOT EXISTS users (" +
@@ -82,15 +85,15 @@ async function schema(db) {
   ]);
 }
 
-async function getUser(db, id) {
+async function getUser(db, userId) {
   return db
     .prepare("SELECT * FROM users WHERE id = ?")
-    .bind(id)
+    .bind(userId)
     .first();
 }
 
-async function ensureUser(db, id) {
-  let user = await getUser(db, id);
+async function ensureUser(db, userId) {
+  let user = await getUser(db, userId);
 
   if (user) {
     return user;
@@ -102,18 +105,14 @@ async function ensureUser(db, id) {
       "(id, bank_sats, mining_sats, created_at) " +
       "VALUES (?, 0, 0, ?)"
     )
-    .bind(id, isoNow())
+    .bind(userId, now())
     .run();
 
-  return getUser(db, id);
+  return getUser(db, userId);
 }
 
 async function accrueMining(db, userId) {
-  if (MINING_DAILY_RATE <= 0) {
-    return;
-  }
-
-  const rows = await db
+  const result = await db
     .prepare(
       "SELECT * FROM mining_cycles " +
       "WHERE user_id = ? AND status = 'active'"
@@ -121,24 +120,35 @@ async function accrueMining(db, userId) {
     .bind(userId)
     .all();
 
-  for (const cycle of rows.results || []) {
+  const cycles = result.results || [];
+
+  for (const cycle of cycles) {
+    const days = Number(cycle.duration_days);
+    const rate = rateFor(days);
+
+    if (!rate) {
+      continue;
+    }
+
     const elapsed = Math.min(
-      Number(cycle.duration_days),
-      daysBetween(cycle.started_at, isoNow())
+      days,
+      elapsedDays(cycle.started_at, now())
     );
 
-    const target = Math.floor(
+    const targetEarned = Math.floor(
       Number(cycle.principal_sats) *
-      MINING_DAILY_RATE *
-      elapsed
+      rate *
+      (elapsed / days)
     );
 
-    const extra = Math.max(
+    const alreadyEarned = Number(cycle.earned_sats || 0);
+
+    const additional = Math.max(
       0,
-      target - Number(cycle.earned_sats || 0)
+      targetEarned - alreadyEarned
     );
 
-    if (!extra) {
+    if (additional <= 0) {
       continue;
     }
 
@@ -149,7 +159,7 @@ async function accrueMining(db, userId) {
           "SET earned_sats = earned_sats + ? " +
           "WHERE id = ?"
         )
-        .bind(extra, cycle.id),
+        .bind(additional, cycle.id),
 
       db
         .prepare(
@@ -157,32 +167,31 @@ async function accrueMining(db, userId) {
           "SET mining_sats = mining_sats + ? " +
           "WHERE id = ?"
         )
-        .bind(extra, userId),
-
-      db
+        .bind(additional, userId),db
         .prepare(
           "INSERT INTO transactions " +
-          "(user_id, type, amount_sats, bank_change_sats, " +"mining_change_sats, reference, created_at) " +
+          "(user_id, type, amount_sats, bank_change_sats, " +
+          "mining_change_sats, reference, created_at) " +
           "VALUES (?, 'MINING_YIELD', ?, 0, ?, ?, ?)"
         )
         .bind(
           userId,
-          extra,
-          extra,
+          additional,
+          additional,
           "cycle:" + cycle.id,
-          isoNow()
+          now()
         )
     ]);
   }
 }
 
-async function state(db, userId) {
+async function getState(db, userId) {
   await ensureUser(db, userId);
   await accrueMining(db, userId);
 
   const user = await getUser(db, userId);
 
-  const cycles = await db
+  const result = await db
     .prepare(
       "SELECT * FROM mining_cycles " +
       "WHERE user_id = ? ORDER BY id DESC"
@@ -204,9 +213,165 @@ async function state(db, userId) {
       Number(user.mining_sats) / 100000000
     ).toFixed(8),
 
-    mining_daily_rate: MINING_DAILY_RATE,
+    mining_rates: MINING_RATES,
 
-    cycles: cycles.results || []
+    cycles: result.results || []
+  };
+}
+
+async function startMining(db, userId, durationDays) {
+  const days = Number(durationDays);
+
+  if (!ALLOWED_DAYS.includes(days)) {
+    throw new Error(
+      "Povolené cykly sú 1, 5, 10, 20 alebo 30 dní."
+    );
+  }
+
+  await ensureUser(db, userId);
+  await accrueMining(db, userId);
+
+  const user = await getUser(db, userId);
+  const amount = Number(user.mining_sats);
+
+  if (amount <= 0) {
+    throw new Error(
+      "Mining zostatok je 0. Najprv získaj Mining odmenu."
+    );
+  }
+
+  const startDate = new Date();
+
+  const endDate = new Date(
+    startDate.getTime() +
+    days * 86400000
+  );
+
+  const result = await db
+    .prepare(
+      "INSERT INTO mining_cycles " +
+      "(user_id, principal_sats, started_at, duration_days, " +
+      "ends_at, status, earned_sats) " +
+      "VALUES (?, ?, ?, ?, ?, 'active', 0)"
+    )
+    .bind(
+      userId,
+      amount,
+      startDate.toISOString(),
+      days,
+      endDate.toISOString()
+    )
+    .run();
+
+  const cycleId = result.meta.last_row_id;
+
+  await db.batch([
+    db
+      .prepare(
+        "UPDATE users " +
+        "SET mining_sats = 0 " +
+        "WHERE id = ?"
+      )
+      .bind(userId),
+
+    db
+      .prepare(
+        "INSERT INTO transactions " +
+        "(user_id, type, amount_sats, bank_change_sats, " +
+        "mining_change_sats, reference, created_at) " +
+        "VALUES (?, 'MINING_START', ?, 0, ?, ?, ?)"
+      )
+      .bind(
+        userId,
+        amount,
+        -amount,
+        "cycle:" + cycleId,
+        now()
+      )
+  ]);
+
+  return {
+    cycle_id: cycleId,
+    principal_sats: amount,
+    duration_days: days,
+    rate: rateFor(days),
+    ends_at: endDate.toISOString()
+  };
+}
+
+async function releaseMining(db, userId, cycleId) {
+  await accrueMining(db, userId);
+
+  const cycle = await db
+    .prepare(
+      "SELECT * FROM mining_cycles " +
+      "WHERE id = ? AND user_id = ?"
+    )
+    .bind(cycleId, userId)
+    .first();
+
+  if (!cycle) {
+    throw new Error("Mining cyklus neexistuje.");
+  }
+
+  if (cycle.status !== "active") {
+    throw new Error("Mining cyklus už bol presunutý.");
+  }
+
+  if (
+    new Date(cycle.ends_at).getTime() >
+    Date.now()
+  ) {
+    throw new Error(
+      "Mining cyklus ešte neskončil."
+    );
+  }
+
+  const principal = Number(
+    cycle.principal_sats
+  );
+
+  const earned = Number(
+    cycle.earned_sats || 0
+  );
+
+  const total = principal + earned;
+
+  await db.batch([
+    db
+      .prepare(
+        "UPDATE users " +
+        "SET bank_sats = bank_sats + ? " +
+        "WHERE id = ?"
+      )
+      .bind(total, userId),
+
+    db
+      .prepare(
+        "UPDATE mining_cycles " +
+        "SET status = 'released', released_at = ? " +
+        "WHERE id = ?"
+      )
+      .bind(now(), cycleId),
+
+    db
+      .prepare(
+        "INSERT INTO transactions " +"(user_id, type, amount_sats, bank_change_sats, " +
+        "mining_change_sats, reference, created_at) " +
+        "VALUES (?, 'MINING_RELEASE', ?, ?, 0, ?, ?)"
+      )
+      .bind(
+        userId,
+        total,
+        total,
+        "cycle:" + cycleId,
+        now()
+      )
+  ]);
+
+  return {
+    cycle_id: cycleId,
+    released_sats: total
   };
 }
 
@@ -217,16 +382,18 @@ async function addPtcReward(
   rewardSats,
   providerRef
 ) {
-  const reward = Math.floor(Number(rewardSats));
+  const reward = Math.floor(
+    Number(rewardSats)
+  );
 
   if (!Number.isFinite(reward) || reward <= 0) {
-    throw new Error("Invalid reward_sats");
+    throw new Error("Neplatná PTC odmena.");
   }
 
   await ensureUser(db, userId);
 
   if (providerRef) {
-    const old = await db
+    const duplicate = await db
       .prepare(
         "SELECT id FROM ptc_completions " +
         "WHERE provider_ref = ? LIMIT 1"
@@ -234,10 +401,10 @@ async function addPtcReward(
       .bind(providerRef)
       .first();
 
-    if (old) {
+    if (duplicate) {
       return {
         duplicate: true,
-        completion_id: old.id
+        completion_id: duplicate.id
       };
     }
   }
@@ -246,7 +413,8 @@ async function addPtcReward(
     reward * PTC_BANK_SHARE
   );
 
-  const mining = reward - bank;
+  const mining =
+    reward - bank;
 
   await db.batch([
     db
@@ -271,13 +439,14 @@ async function addPtcReward(
         bank,
         mining,
         offerId,
-        isoNow()
+        now()
       ),
 
     db
       .prepare(
         "INSERT INTO ptc_completions " +
-        "(user_id, offer_id, reward_sats, provider_ref, created_at) " +
+        "(user_id, offer_id, reward_sats, " +
+        "provider_ref, created_at) " +
         "VALUES (?, ?, ?, ?, ?)"
       )
       .bind(
@@ -285,7 +454,7 @@ async function addPtcReward(
         offerId,
         reward,
         providerRef || null,
-        isoNow()
+        now()
       )
   ]);
 
@@ -297,170 +466,16 @@ async function addPtcReward(
   };
 }
 
-async function startMining(
-  db,
-  userId,
-  durationDays
-) {
-  const days = Number(durationDays);
-
-  if (![1, 5, 10, 20, 30].includes(days)) {
-    throw new Error(
-      "Duration must be 1, 5, 10, 20 or 30 days"
-    );
-  }
-
-  await ensureUser(db, userId);
-  await accrueMining(db, userId);
-
-  const user = await getUser(db, userId);
-  const amount = Number(user.mining_sats);
-
-  if (amount <= 0) {
-    throw new Error("Mining balance is empty");
-  }
-
-  const started = new Date();
-
-  const ends = new Date(
-    started.getTime() + days * 86400000
-  );
-
-  const inserted = await db
-    .prepare(
-      "INSERT INTO mining_cycles " +
-      "(user_id, principal_sats, started_at, duration_days, " +
-      "ends_at, status, earned_sats) " +
-      "VALUES (?, ?, ?, ?, ?, 'active', 0)"
-    )
-    .bind(
-      userId,
-      amount,
-      started.toISOString(),
-      days,
-      ends.toISOString()
-    )
-    .run();
-
-  await db.batch([
-    db
-      .prepare(
-        "UPDATE users " +
-        "SET mining_sats = 0 " +
-        "WHERE id = ?"
-      )
-      .bind(userId),
-
-    db
-      .prepare(
-        "INSERT INTO transactions " +
-        "(user_id, type, amount_sats, bank_change_sats, " +
-        "mining_change_sats, reference, created_at) " +
-        "VALUES (?, 'MINING_START', ?, 0, ?, ?, ?)"
-      )
-      .bind(
-        userId,
-        amount,
-        -amount,
-        "cycle:" + inserted.meta.last_row_id,
-        isoNow()
-      )
-  ]);return {
-    cycle_id: inserted.meta.last_row_id,
-    principal_sats: amount,
-    duration_days: days,
-    ends_at: ends.toISOString()
-  };
-}
-
-async function releaseMining(
-  db,
-  userId,
-  cycleId
-) {
-  await accrueMining(db, userId);
-
-  const cycle = await db
-    .prepare(
-      "SELECT * FROM mining_cycles " +
-      "WHERE id = ? AND user_id = ?"
-    )
-    .bind(cycleId, userId)
-    .first();
-
-  if (!cycle) {
-    throw new Error("Mining cycle not found");
-  }
-
-  if (cycle.status !== "active") {
-    throw new Error(
-      "Mining cycle already released"
-    );
-  }
-
-  if (
-    new Date(cycle.ends_at).getTime() >
-    Date.now()
-  ) {
-    throw new Error(
-      "Mining cycle has not ended yet"
-    );
-  }
-
-  const total =
-    Number(cycle.principal_sats) +
-    Number(cycle.earned_sats);
-
-  await db.batch([
-    db
-      .prepare(
-        "UPDATE users " +
-        "SET bank_sats = bank_sats + ? " +
-        "WHERE id = ?"
-      )
-      .bind(total, userId),
-
-    db
-      .prepare(
-        "UPDATE mining_cycles " +
-        "SET status = 'released', released_at = ? " +
-        "WHERE id = ?"
-      )
-      .bind(isoNow(), cycleId),
-
-    db
-      .prepare(
-        "INSERT INTO transactions " +
-        "(user_id, type, amount_sats, bank_change_sats, " +
-        "mining_change_sats, reference, created_at) " +
-        "VALUES (?, 'MINING_RELEASE', ?, ?, 0, ?, ?)"
-      )
-      .bind(
-        userId,
-        total,
-        total,
-        "cycle:" + cycleId,
-        isoNow()
-      )
-  ]);
-
-  return {
-    cycle_id: cycleId,
-    released_sats: total
-  };
-}
-
 export default {
   async fetch(request, env) {
+
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
         headers: {
-          "access-control-allow-origin": "*",
-          "access-control-allow-methods":
-            "GET,POST,OPTIONS",
-          "access-control-allow-headers":
-            "content-type, authorization"
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization"
         }
       });
     }
@@ -469,17 +484,16 @@ export default {
       return json(
         {
           ok: false,
-          error: "D1 binding DB is missing"
+          error: "D1 binding DB chýba."
         },
         500
       );
     }
 
     try {
-      await schema(env.DB);
+      await createTables(env.DB);
 
       const url = new URL(request.url);
-
       const path =
         url.pathname.replace(/\/+$/, "") || "/";
 
@@ -488,17 +502,8 @@ export default {
           ok: true,
           service: "Lili Faucet Worker",
           status: "online",
-          version: "1.0.1"
-        });
-      }
-
-      if (
-        path === "/api/setup" &&
-        request.method === "POST"
-      ) {
-        return json({
-          ok: true,
-          message: "D1 tables are ready"
+          version: "2.0.0",
+          mining_rates: MINING_RATES
         });
       }
 
@@ -512,86 +517,9 @@ export default {
 
         return json({
           ok: true,
-          ...(await state(
+          ...(await getState(
             env.DB,
             userId
-          ))
-        });
-      }
-
-      if (
-        path === "/api/user" &&
-        request.method === "POST"
-      ) {
-        const body =
-          await bodyJson(request);
-
-        const userId =
-          String(
-            body.user_id || "lili"
-          ).trim();
-
-        if (
-          !/^[A-Za-z0-9_-]{1,64}$/.test(userId)
-        ) {
-          return json(
-            {
-              ok: false,
-              error: "Invalid user_id"
-            },
-            400
-          );
-        }
-
-        return json({
-          ok: true,
-          ...(await state(
-            env.DB,
-            userId
-          ))
-        });
-      }
-
-      if (
-        path === "/api/ptc/reward" &&
-        request.method === "POST"
-      ) {
-        const body =
-          await bodyJson(request);
-
-        const userId =
-          String(
-            body.user_id || ""
-          ).trim();
-
-        const offerId =
-          String(
-            body.offer_id || ""
-          ).trim();if (
-          !userId ||
-          !offerId ||
-          !body.reward_sats
-        ) {
-          return json(
-            {
-              ok: false,
-              error:
-                "user_id, offer_id and reward_sats are required"
-            },
-            400
-          );
-        }
-
-        return json({
-          ok: true,
-          ...(await addPtcReward(
-            env.DB,
-            userId,
-            offerId,
-            body.reward_sats,
-            body.provider_ref
-              ? String(body.provider_ref)
-              : null
           ))
         });
       }
@@ -601,22 +529,23 @@ export default {
         request.method === "POST"
       ) {
         const body =
-          await bodyJson(request);
+          await request.json();
 
         const userId =
           String(
             body.user_id || "lili"
           ).trim();
 
-        return json({
-          ok: true,
-          message:
-            "Mining cycle started",
-          ...(await startMining(
+        const result =
+          await startMining(
             env.DB,
             userId,
             body.duration_days
-          ))
+          );
+
+        return json({
+          ok: true,
+          ...result
         });
       }
 
@@ -625,7 +554,7 @@ export default {
         request.method === "POST"
       ) {
         const body =
-          await bodyJson(request);
+          await request.json();
 
         const userId =
           String(
@@ -633,31 +562,78 @@ export default {
           ).trim();
 
         const cycleId =
-          Number(body.cycle_id);
-
-        if (
+          Number(body.cycle_id);if (
           !Number.isInteger(cycleId) ||
           cycleId <= 0
         ) {
           return json(
             {
               ok: false,
-              error:
-                "Valid cycle_id is required"
+              error: "Neplatné cycle_id."
             },
             400
           );
         }
 
-        return json({
-          ok: true,
-          message:
-            "Mining moved to Bank",
-          ...(await releaseMining(
+        const result =
+          await releaseMining(
             env.DB,
             userId,
             cycleId
-          ))
+          );
+
+        return json({
+          ok: true,
+          ...result
+        });
+      }
+
+      if (
+        path === "/api/ptc/reward" &&
+        request.method === "POST"
+      ) {
+        const body =
+          await request.json();
+
+        const userId =
+          String(
+            body.user_id || ""
+          ).trim();
+
+        const offerId =
+          String(
+            body.offer_id || ""
+          ).trim();
+
+        if (
+          !userId ||
+          !offerId ||
+          !body.reward_sats
+        ) {
+          return json(
+            {
+              ok: false,
+              error:
+                "Chýba user_id, offer_id alebo reward_sats."
+            },
+            400
+          );
+        }
+
+        const result =
+          await addPtcReward(
+            env.DB,
+            userId,
+            offerId,
+            body.reward_sats,
+            body.provider_ref
+              ? String(body.provider_ref)
+              : null
+          );
+
+        return json({
+          ok: true,
+          ...result
         });
       }
 
@@ -669,7 +645,7 @@ export default {
           url.searchParams.get("user_id") ||
           "lili";
 
-        const rows =
+        const result =
           await env.DB
             .prepare(
               "SELECT * FROM transactions " +
@@ -682,19 +658,20 @@ export default {
         return json({
           ok: true,
           transactions:
-            rows.results || []
+            result.results || []
         });
       }
 
       return json(
         {
           ok: false,
-          error: "Not found"
+          error: "Endpoint neexistuje."
         },
         404
       );
 
     } catch (error) {
+
       console.error(error);
 
       return json(
