@@ -1,6 +1,14 @@
 const PTC_BANK_SHARE = 0.50;
 const PTC_MINING_SHARE = 0.50;
 
+// Publisher income:
+// 95 % -> hlavný Bank
+// 5 %  -> pozvaný používateľ
+const PUBLISHER_WEB_SHARE = 0.95;
+const PUBLISHER_USER_SHARE = 0.05;
+
+const MIN_WITHDRAWAL_SATS = 100;
+
 const MINING_RATES = {
   1: 0.0067,
   5: 0.0333,
@@ -36,6 +44,20 @@ function elapsedDays(start, end) {
     0,
     (new Date(end).getTime() - new Date(start).getTime()) / 86400000
   );
+}
+
+function cleanUserId(value) {
+  return String(value || "").trim();
+}
+
+function cleanProvider(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase();
+}
+
+function cleanReference(value) {
+  return String(value || "").trim();
 }
 
 async function createTables(db) {
@@ -81,6 +103,38 @@ async function createTables(db) {
       "reward_sats INTEGER NOT NULL, " +
       "provider_ref TEXT, " +
       "created_at TEXT NOT NULL)"
+    ),
+
+    db.prepare(
+      "CREATE TABLE IF NOT EXISTS referrals (" +
+      "user_id TEXT PRIMARY KEY, " +
+      "referrer_id TEXT NOT NULL, " +
+      "created_at TEXT NOT NULL)"
+    ),
+
+    db.prepare(
+      "CREATE TABLE IF NOT EXISTS provider_earnings (" +
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+      "provider TEXT NOT NULL, " +
+      "user_id TEXT NOT NULL, " +
+      "provider_ref TEXT NOT NULL, " +
+      "publisher_sats INTEGER NOT NULL, " +
+      "web_sats INTEGER NOT NULL, " +
+      "user_sats INTEGER NOT NULL, " +
+      "status TEXT NOT NULL DEFAULT 'confirmed', " +
+      "created_at TEXT NOT NULL, " +
+      "UNIQUE(provider, provider_ref)"
+    ),
+
+    db.prepare(
+      "CREATE TABLE IF NOT EXISTS withdrawals (" +
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+      "user_id TEXT NOT NULL, " +
+      "amount_sats INTEGER NOT NULL, " +
+      "method TEXT NOT NULL, " +
+      "address TEXT NOT NULL, " +
+      "status TEXT NOT NULL DEFAULT 'pending', " +
+      "created_at TEXT NOT NULL)"
     )
   ]);
 }
@@ -97,9 +151,7 @@ async function ensureUser(db, userId) {
 
   if (user) {
     return user;
-  }
-
-  await db
+    }await db
     .prepare(
       "INSERT INTO users " +
       "(id, bank_sats, mining_sats, created_at) " +
@@ -109,6 +161,56 @@ async function ensureUser(db, userId) {
     .run();
 
   return getUser(db, userId);
+}
+
+async function getReferral(db, userId) {
+  return db
+    .prepare(
+      "SELECT * FROM referrals WHERE user_id = ?"
+    )
+    .bind(userId)
+    .first();
+}
+
+async function setReferral(db, userId, referrerId) {
+  userId = cleanUserId(userId);
+  referrerId = cleanUserId(referrerId);
+
+  if (!userId || !referrerId) {
+    throw new Error("Chýba user_id alebo referrer_id.");
+  }
+
+  if (userId === referrerId) {
+    throw new Error("Používateľ nemôže byť vlastným referralom.");
+  }
+
+  await ensureUser(db, userId);
+  await ensureUser(db, referrerId);
+
+  const existing = await getReferral(db, userId);
+
+  if (existing) {
+    return {
+      user_id: userId,
+      referrer_id: existing.referrer_id,
+      existing: true
+    };
+  }
+
+  await db
+    .prepare(
+      "INSERT INTO referrals " +
+      "(user_id, referrer_id, created_at) " +
+      "VALUES (?, ?, ?)"
+    )
+    .bind(userId, referrerId, now())
+    .run();
+
+  return {
+    user_id: userId,
+    referrer_id: referrerId,
+    existing: false
+  };
 }
 
 async function accrueMining(db, userId) {
@@ -167,7 +269,9 @@ async function accrueMining(db, userId) {
           "SET mining_sats = mining_sats + ? " +
           "WHERE id = ?"
         )
-        .bind(additional, userId),db
+        .bind(additional, userId),
+
+      db
         .prepare(
           "INSERT INTO transactions " +
           "(user_id, type, amount_sats, bank_change_sats, " +
@@ -191,13 +295,26 @@ async function getState(db, userId) {
 
   const user = await getUser(db, userId);
 
-  const result = await db
+  const cyclesResult = await db
     .prepare(
       "SELECT * FROM mining_cycles " +
       "WHERE user_id = ? ORDER BY id DESC"
     )
     .bind(userId)
     .all();
+
+  const referral = await getReferral(db, userId);
+
+  const providerResult = await db
+    .prepare(
+      "SELECT " +
+      "COALESCE(SUM(web_sats),0) AS web_sats, " +
+      "COALESCE(SUM(user_sats),0) AS user_sats " +
+      "FROM provider_earnings " +
+      "WHERE user_id = ? AND status = 'confirmed'"
+    )
+    .bind(userId)
+    .first();
 
   return {
     user_id: user.id,
@@ -215,14 +332,19 @@ async function getState(db, userId) {
 
     mining_rates: MINING_RATES,
 
-    cycles: result.results || []
+    referral: referral || null,
+
+    provider_totals: {
+      web_sats: Number(providerResult?.web_sats || 0),
+      user_sats: Number(providerResult?.user_sats || 0)
+    },
+
+    cycles: cyclesResult.results || []
   };
 }
 
 async function startMining(db, userId, durationDays) {
-  const days = Number(durationDays);
-
-  if (!ALLOWED_DAYS.includes(days)) {
+  const days = Number(durationDays);if (!ALLOWED_DAYS.includes(days)) {
     throw new Error(
       "Povolené cykly sú 1, 5, 10, 20 alebo 30 dní."
     );
@@ -356,7 +478,8 @@ async function releaseMining(db, userId, cycleId) {
 
     db
       .prepare(
-        "INSERT INTO transactions " +"(user_id, type, amount_sats, bank_change_sats, " +
+        "INSERT INTO transactions " +
+        "(user_id, type, amount_sats, bank_change_sats, " +
         "mining_change_sats, reference, created_at) " +
         "VALUES (?, 'MINING_RELEASE', ?, ?, 0, ?, ?)"
       )
@@ -424,9 +547,7 @@ async function addPtcReward(
         "mining_sats = mining_sats + ? " +
         "WHERE id = ?"
       )
-      .bind(bank, mining, userId),
-
-    db
+      .bind(bank, mining, userId),db
       .prepare(
         "INSERT INTO transactions " +
         "(user_id, type, amount_sats, bank_change_sats, " +
@@ -466,16 +587,484 @@ async function addPtcReward(
   };
 }
 
+/*
+  PROVIDER INCOME
+
+  provider_amount_sats = skutočný publisher príjem,
+  ktorý Lili Faucet dostane od providera.
+
+  Z neho:
+    95 % -> hlavný Bank
+    5 %  -> používateľ, ktorý dokončil aktivitu.
+
+  POZOR:
+  Toto nie je 95/5 z advertiser spend.
+  Je to 95/5 z publisher income.
+*/
+
+async function addProviderEarning(
+  db,
+  provider,
+  userId,
+  providerRef,
+  publisherSats
+) {
+  provider = cleanProvider(provider);
+  userId = cleanUserId(userId);
+  providerRef = cleanReference(providerRef);
+
+  const amount = Math.floor(
+    Number(publisherSats)
+  );
+
+  if (
+    !provider ||
+    !userId ||
+    !providerRef
+  ) {
+    throw new Error(
+      "Chýba provider, user_id alebo provider_ref."
+    );
+  }
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    throw new Error(
+      "Neplatný publisher príjem."
+    );
+  }
+
+  await ensureUser(db, userId);
+
+  const duplicate = await db
+    .prepare(
+      "SELECT * FROM provider_earnings " +
+      "WHERE provider = ? AND provider_ref = ?"
+    )
+    .bind(
+      provider,
+      providerRef
+    )
+    .first();
+
+  if (duplicate) {
+    return {
+      duplicate: true,
+      earning_id: duplicate.id
+    };
+  }
+
+  const webSats = Math.floor(
+    amount * PUBLISHER_WEB_SHARE
+  );
+
+  const userSats =
+    amount - webSats;
+
+  await db.batch([
+    db
+      .prepare(
+        "INSERT INTO provider_earnings " +
+        "(provider, user_id, provider_ref, " +
+        "publisher_sats, web_sats, user_sats, " +
+        "status, created_at) " +
+        "VALUES (?, ?, ?, ?, ?, ?, 'confirmed', ?)"
+      )
+      .bind(
+        provider,
+        userId,
+        providerRef,
+        amount,
+        webSats,
+        userSats,
+        now()
+      ),
+
+    db
+      .prepare(
+        "UPDATE users " +
+        "SET bank_sats = bank_sats + ? " +
+        "WHERE id = ?"
+      )
+      .bind(
+        webSats,
+        userId
+      ),
+
+    db
+      .prepare(
+        "INSERT INTO transactions " +
+        "(user_id, type, amount_sats, " +
+        "bank_change_sats, mining_change_sats, " +
+        "reference, created_at) " +
+        "VALUES (?, 'PROVIDER_WEB_EARNING', ?, ?, 0, ?, ?)"
+      )
+      .bind(
+        userId,
+        webSats,
+        webSats,
+        provider + ":" + providerRef,
+        now()
+      )
+  ]);
+
+  /*
+    5 % používateľa ide do jeho Bank.
+    Nie je to samostatná platba z tvojho vrecka.
+    Je to časť skutočného publisher príjmu.
+  */
+
+  if (userSats > 0) {
+    await db
+      .prepare(
+        "UPDATE users " +
+        "SET bank_sats = bank_sats + ? " +
+        "WHERE id = ?"
+      )
+      .bind(
+        userSats,
+        userId
+      )
+      .run();
+
+    await db
+      .prepare(
+        "INSERT INTO transactions " +
+        "(user_id, type, amount_sats, " +
+        "bank_change_sats, mining_change_sats, " +
+        "reference, created_at) " +
+        "VALUES (?, 'PROVIDER_USER_REWARD', ?, ?, 0, ?, ?)"
+      )
+      .bind(
+        userId,
+        userSats,
+        userSats,
+        provider + ":" + providerRef,
+        now()
+      )
+      .run();
+  }
+
+  return {
+    duplicate: false,
+    provider,
+    provider_ref: providerRef,
+    publisher_sats: amount,
+    web_sats: webSats,
+    user_sats: userSats
+  };
+}
+
+/*
+  Jednoduchý všeobecný provider endpoint.Neskôr sem napojíme presné S2S postback formáty
+  AdParagon, CoinlyAds a SplitGrid.
+*/
+
+async function providerPostback(
+  db,
+  provider,
+  request
+) {
+  let body = {};
+
+  const contentType =
+    request.headers.get("content-type") || "";
+
+  if (
+    contentType.includes(
+      "application/json"
+    )
+  ) {
+    body = await request.json();
+  } else {
+    const form =
+      await request.formData();
+
+    for (const [
+      key,
+      value
+    ] of form.entries()) {
+      body[key] = String(value);
+    }
+  }
+
+  const userId = cleanUserId(
+    body.user_id ||
+    body.user ||
+    body.uid ||
+    body.sub_id
+  );
+
+  const providerRef = cleanReference(
+    body.transaction_id ||
+    body.transaction ||
+    body.txid ||
+    body.click_id ||
+    body.ref ||
+    body.provider_ref
+  );
+
+  /*
+    Provider môže poslať:
+      publisher_sats
+      earn_sats
+      reward_sats
+      earn
+      payout
+
+    Presný prevod na sats ešte nastavíme
+    podľa konkrétneho dashboardu providera.
+  */
+
+  const rawAmount =
+    body.publisher_sats ??
+    body.earn_sats ??
+    body.reward_sats ??
+    body.earn ??
+    body.payout;
+
+  const amount = Number(rawAmount);
+
+  if (!userId) {
+    return json(
+      {
+        ok: false,
+        error: "Chýba user_id."
+      },
+      400
+    );
+  }
+
+  if (!providerRef) {
+    return json(
+      {
+        ok: false,
+        error: "Chýba provider transaction/reference."
+      },
+      400
+    );
+  }
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    return json(
+      {
+        ok: false,
+        error:
+          "Chýba platný publisher príjem."
+      },
+      400
+    );
+  }
+
+  /*
+    V tejto fáze očakávame sats.
+    Ak provider posiela USD, presný kurz
+    doplníme podľa jeho API/postback dokumentácie.
+  */
+
+  const result =
+    await addProviderEarning(
+      db,
+      provider,
+      userId,
+      providerRef,
+      amount
+    );
+
+  return json({
+    ok: true,
+    provider,
+    ...result
+  });
+}
+
+async function transferBankToMining(
+  db,
+  userId,
+  amountSats
+) {
+  const amount = Math.floor(
+    Number(amountSats)
+  );
+
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
+    throw new Error(
+      "Neplatná suma."
+    );
+  }
+
+  await ensureUser(db, userId);
+
+  const user =
+    await getUser(db, userId);
+
+  if (
+    Number(user.bank_sats) <
+    amount
+  ) {
+    throw new Error(
+      "V Banku nie je dostatok prostriedkov."
+    );
+  }
+
+  await db.batch([
+    db
+      .prepare(
+        "UPDATE users SET " +
+        "bank_sats = bank_sats - ?, " +
+        "mining_sats = mining_sats + ? " +
+        "WHERE id = ?"
+      )
+      .bind(
+        amount,
+        amount,
+        userId
+      ),
+
+    db
+      .prepare(
+        "INSERT INTO transactions " +
+        "(user_id, type, amount_sats, " +
+        "bank_change_sats, mining_change_sats, " +
+        "reference, created_at) " +
+        "VALUES (?, 'BANK_TO_MINING', ?, ?, ?, ?, ?)"
+      )
+      .bind(
+        userId,
+        amount,
+        -amount,
+        amount,
+        "bank-to-mining",
+        now()
+      )
+  ]);
+
+  return {
+    amount_sats: amount
+  };
+}
+
+async function createWithdrawal(
+  db,
+  userId,
+  amountSats,
+  method,
+  address
+) {
+  const amount = Math.floor(
+    Number(amountSats)
+  );
+
+  method = String(
+    method || ""
+  ).trim();
+
+  address = String(
+    address || ""
+  ).trim();
+
+  if (
+    !Number.isFinite(amount) ||
+    amount < MIN_WITHDRAWAL_SATS
+  ) {
+    throw new Error(
+      Minimum výberu je ${MIN_WITHDRAWAL_SATS} sats.
+    );
+  }
+
+  if (!method || !address) {
+    throw new Error(
+      "Chýba spôsob výberu alebo adresa."
+    );
+  }
+
+  await ensureUser(db, userId);
+
+  const user =
+    await getUser(db, userId);
+
+  if (
+    Number(user.bank_sats) <
+    amount
+  ) {
+    throw new Error(
+      "V Banku nie je dostatok prostriedkov."
+    );
+    }const result =
+    await db
+      .prepare(
+        "INSERT INTO withdrawals " +
+        "(user_id, amount_sats, method, address, " +
+        "status, created_at) " +
+        "VALUES (?, ?, ?, ?, 'pending', ?)"
+      )
+      .bind(
+        userId,
+        amount,
+        method,
+        address,
+        now()
+      )
+      .run();
+
+  await db.batch([
+    db
+      .prepare(
+        "UPDATE users " +
+        "SET bank_sats = bank_sats - ? " +
+        "WHERE id = ?"
+      )
+      .bind(
+        amount,
+        userId
+      ),
+
+    db
+      .prepare(
+        "INSERT INTO transactions " +
+        "(user_id, type, amount_sats, " +
+        "bank_change_sats, mining_change_sats, " +
+        "reference, created_at) " +
+        "VALUES (?, 'WITHDRAWAL', ?, ?, 0, ?, ?)"
+      )
+      .bind(
+        userId,
+        amount,
+        -amount,
+        "withdrawal:" +
+        result.meta.last_row_id,
+        now()
+      )
+  ]);
+
+  return {
+    withdrawal_id:
+      result.meta.last_row_id,
+    amount_sats: amount,
+    method,
+    status: "pending"
+  };
+}
+
 export default {
   async fetch(request, env) {
-
     if (request.method === "OPTIONS") {
       return new Response(null, {
         status: 204,
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization"
+          "Access-Control-Allow-Methods":
+            "GET,POST,OPTIONS",
+          "Access-Control-Allow-Headers":
+            "Content-Type, Authorization"
         }
       });
     }
@@ -493,17 +1082,35 @@ export default {
     try {
       await createTables(env.DB);
 
-      const url = new URL(request.url);
+      const url =
+        new URL(request.url);
+
       const path =
-        url.pathname.replace(/\/+$/, "") || "/";
+        url.pathname.replace(
+          /\/+$/,
+          ""
+        ) || "/";
 
       if (path === "/") {
         return json({
           ok: true,
           service: "Lili Faucet Worker",
           status: "online",
-          version: "2.0.0",
-          mining_rates: MINING_RATES
+          version: "3.0.0",
+          publisher_split: {
+            web: PUBLISHER_WEB_SHARE,
+            invited_user:
+              PUBLISHER_USER_SHARE
+          },
+          minimum_withdrawal_sats:
+            MIN_WITHDRAWAL_SATS,
+          providers: [
+            "adparagon",
+            "coinlyads",
+            "splitgrid"
+          ],
+          mining_rates:
+            MINING_RATES
         });
       }
 
@@ -512,8 +1119,11 @@ export default {
         request.method === "GET"
       ) {
         const userId =
-          url.searchParams.get("user_id") ||
-          "lili";
+          cleanUserId(
+            url.searchParams.get(
+              "user_id"
+            ) || "lili"
+          );
 
         return json({
           ok: true,
@@ -525,6 +1135,26 @@ export default {
       }
 
       if (
+        path === "/api/referral/set" &&
+        request.method === "POST"
+      ) {
+        const body =
+          await request.json();
+
+        const result =
+          await setReferral(
+            env.DB,
+            body.user_id,
+            body.referrer_id
+          );
+
+        return json({
+          ok: true,
+          ...result
+        });
+      }
+
+      if (
         path === "/api/mining/start" &&
         request.method === "POST"
       ) {
@@ -532,9 +1162,9 @@ export default {
           await request.json();
 
         const userId =
-          String(
+          cleanUserId(
             body.user_id || "lili"
-          ).trim();
+          );
 
         const result =
           await startMining(
@@ -557,19 +1187,22 @@ export default {
           await request.json();
 
         const userId =
-          String(
+          cleanUserId(
             body.user_id || "lili"
-          ).trim();
+          );
 
         const cycleId =
           Number(body.cycle_id);if (
-          !Number.isInteger(cycleId) ||
+          !Number.isInteger(
+            cycleId
+          ) ||
           cycleId <= 0
         ) {
           return json(
             {
               ok: false,
-              error: "Neplatné cycle_id."
+              error:
+                "Neplatné cycle_id."
             },
             400
           );
@@ -589,6 +1222,31 @@ export default {
       }
 
       if (
+        path === "/api/bank/to-mining" &&
+        request.method === "POST"
+      ) {
+        const body =
+          await request.json();
+
+        const userId =
+          cleanUserId(
+            body.user_id || "lili"
+          );
+
+        const result =
+          await transferBankToMining(
+            env.DB,
+            userId,
+            body.amount_sats
+          );
+
+        return json({
+          ok: true,
+          ...result
+        });
+      }
+
+      if (
         path === "/api/ptc/reward" &&
         request.method === "POST"
       ) {
@@ -596,14 +1254,14 @@ export default {
           await request.json();
 
         const userId =
-          String(
+          cleanUserId(
             body.user_id || ""
-          ).trim();
+          );
 
         const offerId =
-          String(
+          cleanReference(
             body.offer_id || ""
-          ).trim();
+          );
 
         if (
           !userId ||
@@ -627,7 +1285,9 @@ export default {
             offerId,
             body.reward_sats,
             body.provider_ref
-              ? String(body.provider_ref)
+              ? String(
+                  body.provider_ref
+                )
               : null
           );
 
@@ -637,13 +1297,115 @@ export default {
         });
       }
 
+      /*
+        SPOLOČNÝ PROVIDER POSTBACK
+
+        /api/postback/adparagon
+        /api/postback/coinlyads
+        /api/postback/splitgrid
+      */
+
       if (
+        path.startsWith(
+          "/api/postback/"
+        ) &&
+        request.method === "POST"
+      ) {
+        const provider =
+          cleanProvider(
+            path.split(
+              "/"
+            )[3]
+          );
+
+        const allowed = [
+          "adparagon",
+          "coinlyads",
+          "splitgrid"
+        ];
+
+        if (
+          !allowed.includes(
+            provider
+          )
+        ) {
+          return json(
+            {
+              ok: false,
+              error:
+                "Neznámy provider."
+            },
+            400
+          );
+        }
+
+        return await providerPostback(
+          env.DB,
+          provider,
+          request
+        );
+      }
+
+      if (
+        path === "/api/withdraw" &&
+        request.method === "POST"
+      ) {
+        const body =
+          await request.json();
+
+        const result =
+          await createWithdrawal(
+            env.DB,
+            cleanUserId(
+              body.user_id || ""
+            ),
+            body.amount_sats,
+            body.method,
+            body.address
+          );
+
+        return json({
+          ok: true,
+          ...result
+        });
+      }
+
+      if (
+        path === "/api/provider-earnings" &&
+        request.method === "GET"
+      ) {
+        const userId =
+          cleanUserId(
+            url.searchParams.get(
+              "user_id"
+            ) || "lili"
+          );
+
+        const result =
+          await env.DB
+            .prepare(
+              "SELECT * FROM provider_earnings " +
+              "WHERE user_id = ? " +
+              "ORDER BY id DESC LIMIT 100"
+            )
+            .bind(userId)
+            .all();
+
+        return json({
+          ok: true,
+          earnings:
+            result.results || []
+        });
+      }if (
         path === "/api/transactions" &&
         request.method === "GET"
       ) {
         const userId =
-          url.searchParams.get("user_id") ||
-          "lili";
+          cleanUserId(
+            url.searchParams.get(
+              "user_id"
+            ) || "lili"
+          );
 
         const result =
           await env.DB
@@ -662,16 +1424,44 @@ export default {
         });
       }
 
+      if (
+        path === "/api/withdrawals" &&
+        request.method === "GET"
+      ) {
+        const userId =
+          cleanUserId(
+            url.searchParams.get(
+              "user_id"
+            ) || "lili"
+          );
+
+        const result =
+          await env.DB
+            .prepare(
+              "SELECT * FROM withdrawals " +
+              "WHERE user_id = ? " +
+              "ORDER BY id DESC LIMIT 100"
+            )
+            .bind(userId)
+            .all();
+
+        return json({
+          ok: true,
+          withdrawals:
+            result.results || []
+        });
+      }
+
       return json(
         {
           ok: false,
-          error: "Endpoint neexistuje."
+          error:
+            "Endpoint neexistuje."
         },
         404
       );
 
     } catch (error) {
-
       console.error(error);
 
       return json(
