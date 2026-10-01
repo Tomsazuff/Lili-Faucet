@@ -615,23 +615,24 @@ const referrer = params.get("ref") || "";
 
 let USER_ID = localStorage.getItem("lili_user_id");
 
-if (!USER_ID) {
-  if (referrer === "lili") {
-    USER_ID = "u_" + crypto.randomUUID().replace(/-/g, "");
-    localStorage.setItem("lili_user_id", USER_ID);
+if (referrer === "lili" && (!USER_ID || USER_ID === OWNER_ID)) {
+  USER_ID = "u_" + crypto.randomUUID().replace(/-/g, "");
+  localStorage.setItem("lili_user_id", USER_ID);
 
-    fetch(API + "/api/referral/set", {
-      method: "POST",
-      headers: {"content-type": "application/json"},
-      body: JSON.stringify({
-        user_id: USER_ID,
-        referrer_id: OWNER_ID
-      })
-    }).catch(() => {});
-  } else {
-    USER_ID = OWNER_ID;
-    localStorage.setItem("lili_user_id", USER_ID);
-  }
+  fetch(API + "/api/referral/set", {
+    method: "POST",
+    headers: {"content-type": "application/json"},
+    body: JSON.stringify({
+      user_id: USER_ID,
+      referrer_id: OWNER_ID
+    })
+  }).catch(() => {});
+}
+
+if (!USER_ID) {
+  USER_ID = OWNER_ID;
+  localStorage.setItem("lili_user_id", USER_ID);
+                       }
   }
 
 const rates = {
