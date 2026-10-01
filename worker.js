@@ -1080,7 +1080,6 @@ export default {
     }
 
     try {
-      await createTables(env.DB);
 
       const url =
         new URL(request.url);
