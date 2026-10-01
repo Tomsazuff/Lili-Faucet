@@ -634,14 +634,16 @@ if (!USER_ID) {
   localStorage.setItem("lili_user_id", USER_ID);
                        }
   }
-const referralLink = document.getElementById("referralLink");
+setTimeout(() => {
+  const referralLink = document.getElementById("referralLink");
 
-if (referralLink) {
-  referralLink.value =
-    window.location.origin +
-    window.location.pathname +
-    "?ref=" + OWNER_ID;
+  if (referralLink) {
+    referralLink.value =
+      window.location.origin +
+      window.location.pathname +
+      "?ref=" + OWNER_ID;
   }
+}, 100);
 const rates = {
 1:0.0067,
 5:0.0333,
