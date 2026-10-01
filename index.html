@@ -96,6 +96,7 @@ header p{
 }
 
 select,
+input,
 button{
   width:100%;
   padding:13px;
@@ -104,7 +105,8 @@ button{
   font-size:16px;
 }
 
-select{
+select,
+input{
   border:1px solid #ccc;
   background:white;
 }
@@ -118,6 +120,13 @@ button{
 
 button:disabled{
   background:#aaa;
+}
+
+.provider{
+  border:1px solid #ddd;
+  border-radius:11px;
+  padding:15px;
+  margin-top:12px;
 }
 
 .rate-table{
@@ -173,8 +182,8 @@ button:disabled{
 <body>
 
 <header>
-  <h1>🎁 Lili Faucet</h1>
-  <p>PTC • Bank • Mining</p>
+<h1>🎁 Lili Faucet</h1>
+<p>PTC • Bank • Mining • Offerwall</p>
 </header>
 
 <div class="container">
@@ -182,16 +191,12 @@ button:disabled{
 <!-- ZOSTATKY -->
 
 <div class="card">
-
 <h2>💰 Moje zostatky</h2>
 
 <div class="balances">
 
 <div class="balance">
-
-<div class="balance-title">
-🏦 Bank
-</div>
+<div class="balance-title">🏦 Bank</div>
 
 <div class="amount" id="bankSats">
 0 sats
@@ -200,15 +205,10 @@ button:disabled{
 <div class="small" id="bankBtc">
 0.00000000 BTC
 </div>
-
 </div>
-
 
 <div class="balance">
-
-<div class="balance-title">
-⛏️ Mining
-</div>
+<div class="balance-title">⛏️ Mining</div>
 
 <div class="amount" id="miningSats">
 0 sats
@@ -217,7 +217,6 @@ button:disabled{
 <div class="small" id="miningBtc">
 0.00000000 BTC
 </div>
-
 </div>
 
 </div>
@@ -225,24 +224,89 @@ button:disabled{
 <div id="serverStatus" class="status">
 Pripájam sa k serveru...
 </div>
-
 </div>
 
 
 <!-- ÚČET -->
 
 <div class="card">
-
 <h2>👤 Účet</h2>
 
 <p>
 ID účtu:
-<strong>lili</strong>
+<strong id="userIdText">lili</strong>
 </p>
 
 <p class="small">
 Údaje sú uložené v Cloudflare D1.
 </p>
+</div>
+
+
+<!-- PROVIDERI -->
+
+<div class="card">
+
+<h2>🌐 Zárobkové systémy</h2>
+
+<p>
+Z jedného potvrdeného publisher príjmu:
+</p>
+
+<div class="status success">
+<strong>95 % → Lili Faucet Bank</strong><br>
+<strong>5 % → používateľ</strong>
+</div>
+
+<div class="provider">
+
+<h3>🟣 AdParagon</h3>
+
+<p class="small">
+PTC • Offerwall • Surveys • Playtime
+</p>
+
+<button
+onclick="openProvider('adparagon')">
+Otvoriť AdParagon
+</button>
+
+</div>
+
+<div class="provider">
+
+<h3>🔵 CoinlyAds</h3>
+
+<p class="small">
+PTC • Surf • Offerwall
+</p>
+
+<button
+onclick="openProvider('coinlyads')">
+Otvoriť CoinlyAds
+</button>
+
+</div>
+
+<div class="provider">
+
+<h3>🟢 SplitGrid</h3>
+
+<p class="small">
+PTC • Offerwall • Surveys • Games
+</p>
+
+<button
+onclick="openProvider('splitgrid')">
+Otvoriť SplitGrid
+</button>
+
+</div>
+
+<div class="status">
+<strong>Bank je spoločný pre všetky 3 systémy.</strong><br>
+Potvrdené príjmy sa evidujú podľa providera.
+</div>
 
 </div>
 
@@ -251,10 +315,8 @@ ID účtu:
 
 <div class="card">
 
-<h2>🎯 PTC odmeny</h2>
-
-<p>
-Tu budú zobrazené skutočné PTC ponuky po pripojení reklamného poskytovateľa.
+<h2>🎯 PTC odmeny</h2><p>
+PTC odmeny budú napojené cez externého poskytovateľa.
 </p>
 
 <div class="status">
@@ -280,9 +342,7 @@ Príklad: PTC odmena 1 000 sats =
 
 <p>
 Mining používa prostriedky z Mining zostatku.
-<strong>Bank sa pri spustení mining cyklu neznižuje.</strong>
 </p>
-
 
 <h3>📈 Výnos podľa cyklu</h3>
 
@@ -323,11 +383,10 @@ Mining používa prostriedky z Mining zostatku.
 </tr>
 
 </tbody>
-
 </table>
 
 
-<label for="duration">
+<label>
 <strong>Vyber mining cyklus:</strong>
 </label>
 
@@ -339,7 +398,9 @@ Mining používa prostriedky z Mining zostatku.
 
 <option value="5">
 5 dní — 3,33 %
-  </option><option value="10">
+</option>
+
+<option value="10">
 10 dní — 8 %
 </option>
 
@@ -353,7 +414,6 @@ Mining používa prostriedky z Mining zostatku.
 
 </select>
 
-
 <button id="startMining">
 ⛏️ Spustiť mining cyklus
 </button>
@@ -362,12 +422,118 @@ Mining používa prostriedky z Mining zostatku.
 Vyber dĺžku cyklu.
 </div>
 
-
-<h3>
-📊 Moje mining cykly
-</h3>
+<h3>📊 Moje mining cykly</h3>
 
 <div id="cycles">
+Načítavam...
+</div>
+
+</div>
+
+
+<!-- BANK -->
+
+<div class="card">
+
+<h2>🏦 Bank</h2>
+
+<p>
+Prostriedky z Banku môžeš presunúť do Mining.
+</p>
+
+<input
+id="bankToMiningAmount"
+type="number"
+min="1"
+placeholder="Suma v sats">
+
+<button onclick="transferBankToMining()">
+🏦 → ⛏️ Presunúť do Mining
+</button>
+
+<div id="bankMiningMessage" class="status">
+Zadaj sumu.
+</div>
+
+</div>
+
+
+<!-- REFERRAL -->
+
+<div class="card">
+
+<h2>👥 Referral</h2>
+
+<p>
+Tvoj referral odkaz:
+</p>
+
+<input
+id="referralLink"
+readonly>
+
+<button onclick="copyReferral()">
+📋 Kopírovať referral odkaz
+</button>
+
+<div id="referralMessage" class="status">
+Referral systém.
+</div>
+
+</div>
+
+
+<!-- VÝBER -->
+
+<div class="card">
+
+<h2>💸 Výber</h2>
+
+<p>
+Minimum výberu:
+<strong>100 sats</strong>
+</p>
+
+<input
+id="withdrawAmount"
+type="number"
+min="100"
+placeholder="Suma v sats">
+
+<select id="withdrawMethod">
+
+<option value="FaucetPay">
+FaucetPay
+</option>
+
+</select>
+
+<input
+id="withdrawAddress"
+placeholder="FaucetPay používateľ / adresa">
+
+<button onclick="requestWithdrawal()">
+💸 Požiadať o výber
+</button>
+
+<div id="withdrawMessage" class="status">
+Výber je spracovaný podľa dostupných podmienok.
+</div>
+
+</div>
+
+
+<!-- PROVIDER EARNINGS -->
+
+<div class="card">
+
+<h2>📊 Príjmy z providerov</h2>
+
+<div id="providerTotals">
+Načítavam...
+</div>
+
+<div id="providerEarnings">
 Načítavam...
 </div>
 
@@ -391,39 +557,40 @@ Načítavam...
 
 <div class="card">
 
-<h2>ℹ️ Ako mining funguje</h2>
+<h2>ℹ️ Ako systém funguje</h2>
 
 <p>
-PTC odmena sa rozdelí 50/50.
+Používateľ dokončí platnú aktivitu u externého providera.
 </p>
 
 <p>
-<strong>50 %</strong> ide do Banku.
+Provider po potvrdení odošle publisher príjem do Lili Faucet.
 </p>
 
 <p>
-<strong>50 %</strong> ide do Mining.
+<strong>95 %</strong> skutočného publisher príjmu ide do Banku webu.
 </p>
 
 <p>
-Mining potom môžeš vložiť do cyklu.
+<strong>5 %</strong> ide používateľovi, ktorý aktivitu dokončil.
 </p>
 
 <p>
-Po skončení cyklu sa celý výsledok
-<strong>kapitál + miningový výnos</strong>
-presunie do Banku.
+Príjmy z AdParagon, CoinlyAds a SplitGrid sa evidujú v jednom systéme Bank.
+</p>
+
+<p>
+Z Banku je možné presúvať prostriedky do Mining.
 </p>
 
 <p class="small">
-Percentá sú interné pravidlá systému.
-Skutočné BTC výplaty musia byť kryté reálnymi príjmami.
+Výplaty providerov môžu byť predmetom pending období,
+chargebackov alebo pravidiel jednotlivých poskytovateľov.
 </p>
 
 </div>
 
 </div>
-
 
 <footer style="text-align:center;padding:25px;color:#777">
 Lili Faucet
@@ -438,15 +605,12 @@ const API =
 const USER_ID = "lili";
 
 const rates = {
-
-1: 0.0067,
-5: 0.0333,
-10: 0.08,
-20: 0.1667,
-30: 0.2667
-
+1:0.0067,
+5:0.0333,
+10:0.08,
+20:0.1667,
+30:0.2667
 };
-
 
 const bankSats =
 document.getElementById("bankSats");
@@ -467,9 +631,7 @@ const cycles =
 document.getElementById("cycles");
 
 const transactions =
-document.getElementById("transactions");
-
-const miningMessage =
+document.getElementById("transactions");const miningMessage =
 document.getElementById("miningMessage");
 
 const startMining =
@@ -482,7 +644,8 @@ document.getElementById("duration");
 function formatSats(value){
 
 return Number(value || 0)
-.toLocaleString("sk-SK") + " sats";
+.toLocaleString("sk-SK") +
+" sats";
 
 }
 
@@ -490,14 +653,15 @@ return Number(value || 0)
 function formatBtc(value){
 
 return Number(value || 0)
-.toFixed(8) + " BTC";
+.toFixed(8) +
+" BTC";
 
 }
 
 
 function formatDate(value){
 
-if(!value) return "-";
+if(!value)return "-";
 
 return new Date(value)
 .toLocaleString("sk-SK");
@@ -561,15 +725,12 @@ minutes + " min"
 }
 
 
-async function loadState(){
-
-try{
+async function api(path, options){
 
 const response =
 await fetch(
-API +
-"/api/state?user_id=" +
-encodeURIComponent(USER_ID)
+API + path,
+options
 );
 
 const data =
@@ -584,6 +745,20 @@ data.error ||
 
 }
 
+return data;
+
+}
+
+
+async function loadState(){
+
+try{
+
+const data =
+await api(
+"/api/state?user_id=" +
+encodeURIComponent(USER_ID)
+);
 
 bankSats.textContent =
 formatSats(data.bank_sats);
@@ -597,22 +772,26 @@ formatSats(data.mining_sats);
 miningBtc.textContent =
 formatBtc(data.mining_btc);
 
-
 serverStatus.className =
 "status success";
 
 serverStatus.textContent =
 "🟢 Účet je pripojený k serveru.";
 
-
 renderCycles(
 data.cycles || []
 );
 
+renderProviderTotals(
+data.provider_totals || {}
+);
+
 await loadTransactions();
 
+await loadProviderEarnings();
 
-}catch(error){
+}
+catch(error){
 
 console.error(error);
 
@@ -640,17 +819,15 @@ return;
 
 }
 
-
 cycles.innerHTML = "";
-
 
 list.forEach(cycle => {
 
 const box =
 document.createElement("div");
 
-box.className = "cycle";
-
+box.className =
+"cycle";
 
 const principal =
 Number(
@@ -665,11 +842,10 @@ cycle.earned_sats || 0
 const total =
 principal + earned;
 
-
 const ended =
-new Date(cycle.ends_at)
-.getTime() <= Date.now();
-
+new Date(
+cycle.ends_at
+).getTime() <= Date.now();
 
 let html = "";
 
@@ -680,8 +856,12 @@ cycle.id +
 
 html +=
 "<div class='rate'>" +
-rateText(cycle.duration_days) +
-"</div>";html +=
+rateText(
+cycle.duration_days
+) +
+"</div>";
+
+html +=
 "<p>💰 Vložené: <strong>" +
 formatSats(principal) +
 "</strong></p>";
@@ -713,7 +893,9 @@ formatDate(cycle.ends_at) +
 
 html +=
 "<p>" +
-remainingText(cycle.ends_at) +
+remainingText(
+cycle.ends_at
+) +
 "</p>";
 
 html +=
@@ -722,9 +904,7 @@ html +=
 cycle.status +
 "</span></p>";
 
-
 box.innerHTML = html;
-
 
 if(
 cycle.status === "active" &&
@@ -750,7 +930,6 @@ box.appendChild(button);
 
 }
 
-
 cycles.appendChild(box);
 
 });
@@ -760,7 +939,8 @@ cycles.appendChild(box);
 
 async function startMiningCycle(){
 
-startMining.disabled = true;
+startMining.disabled =
+true;
 
 miningMessage.className =
 "status";
@@ -768,14 +948,12 @@ miningMessage.className =
 miningMessage.textContent =
 "⛏️ Spúšťam mining cyklus...";
 
-
 try{
 
-const response =
-await fetch(
-API + "/api/mining/start",
+const data =
+await api(
+"/api/mining/start",
 {
-
 method:"POST",
 
 headers:{
@@ -794,27 +972,8 @@ duration.value
 )
 
 })
-
 }
 );
-
-
-const data =
-await response.json();
-
-
-if(
-!response.ok ||
-!data.ok
-){
-
-throw new Error(
-data.error ||
-"Mining sa nepodarilo spustiť."
-);
-
-}
-
 
 miningMessage.className =
 "status success";
@@ -822,19 +981,15 @@ miningMessage.className =
 miningMessage.textContent =
 "✅ Mining cyklus #" +
 data.cycle_id +
-" bol spustený. " +
-"Výnos: " +
+" bol spustený. Výnos: " +
 rateText(
 data.duration_days
 );
 
-
 await loadState();
 
-
-}catch(error){
-
-miningMessage.className =
+}
+catch(error){miningMessage.className =
 "status error";
 
 miningMessage.textContent =
@@ -843,8 +998,8 @@ error.message;
 
 }
 
-
-startMining.disabled = false;
+startMining.disabled =
+false;
 
 }
 
@@ -857,14 +1012,12 @@ miningMessage.className =
 miningMessage.textContent =
 "🏦 Presúvam Mining do Banku...";
 
-
 try{
 
-const response =
-await fetch(
-API + "/api/mining/release",
+const data =
+await api(
+"/api/mining/release",
 {
-
 method:"POST",
 
 headers:{
@@ -881,27 +1034,8 @@ cycle_id:
 cycleId
 
 })
-
 }
 );
-
-
-const data =
-await response.json();
-
-
-if(
-!response.ok ||
-!data.ok
-){
-
-throw new Error(
-data.error ||
-"Presun sa nepodaril."
-);
-
-}
-
 
 miningMessage.className =
 "status success";
@@ -913,11 +1047,10 @@ data.released_sats
 ) +
 " bolo presunutých do Banku.";
 
-
 await loadState();
 
-
-}catch(error){
+}
+catch(error){
 
 miningMessage.className =
 "status error";
@@ -931,33 +1064,293 @@ error.message;
 }
 
 
+async function transferBankToMining(){
+
+const amount =
+Number(
+document.getElementById(
+"bankToMiningAmount"
+).value
+);
+
+const message =
+document.getElementById(
+"bankMiningMessage"
+);
+
+message.className =
+"status";
+
+message.textContent =
+"⏳ Presúvam...";
+
+try{
+
+const data =
+await api(
+"/api/bank/to-mining",
+{
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+user_id:
+USER_ID,
+
+amount_sats:
+amount
+
+})
+}
+);
+
+message.className =
+"status success";
+
+message.textContent =
+"✅ Presunutých " +
+formatSats(
+data.amount_sats
+) +
+" do Mining.";
+
+await loadState();
+
+}
+catch(error){
+
+message.className =
+"status error";
+
+message.textContent =
+"❌ " +
+error.message;
+
+}
+
+}
+
+
+async function requestWithdrawal(){
+
+const amount =
+Number(
+document.getElementById(
+"withdrawAmount"
+).value
+);
+
+const method =
+document.getElementById(
+"withdrawMethod"
+).value;
+
+const address =
+document.getElementById(
+"withdrawAddress"
+).value.trim();
+
+const message =
+document.getElementById(
+"withdrawMessage"
+);
+
+message.className =
+"status";
+
+message.textContent =
+"⏳ Odosielam žiadosť...";
+
+try{
+
+const data =
+await api(
+"/api/withdraw",
+{
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+user_id:
+USER_ID,
+
+amount_sats:
+amount,
+
+method:
+method,
+
+address:
+address
+
+})
+}
+);
+
+message.className =
+"status success";
+
+message.textContent =
+"✅ Žiadosť #" +
+data.withdrawal_id +
+" bola vytvorená.";
+
+await loadState();
+
+}
+catch(error){
+
+message.className =
+"status error";
+
+message.textContent =
+"❌ " +
+error.message;
+
+}
+
+}
+
+
+async function loadProviderEarnings(){
+
+const container =
+document.getElementById(
+"providerEarnings"
+);
+
+try{
+
+const data =
+await api(
+"/api/provider-earnings?user_id=" +
+encodeURIComponent(USER_ID)
+);
+
+if(
+!data.earnings ||
+!data.earnings.length
+){
+
+container.innerHTML =
+"<p class='small'>" +
+"Zatiaľ žiadne potvrdené príjmy." +
+"</p>";
+
+return;
+
+}
+
+container.innerHTML =
+data.earnings
+.map(item => {
+
+return (
+"<div class='transaction'>" +
+
+"<strong>" +
+String(
+item.provider
+).toUpperCase() +
+"</strong>" +
+
+"<br>" +
+
+"Publisher príjem: " +
+formatSats(
+item.publisher_sats
+) +
+
+"<br>" +
+
+"Web 95 %: " +
+formatSats(
+item.web_sats
+) +
+
+"<br>" +
+
+"Používateľ 5 %: " +
+formatSats(
+item.user_sats
+) +
+
+"<br>" +
+
+"<span class='small'>" +
+formatDate(
+item.created_at
+) +
+"</span>" +
+
+"</div>"
+);
+
+})
+.join("");
+
+}
+catch(error){
+
+container.innerHTML =
+"<p class='small'>" +
+"Príjmy providerov sa nepodarilo načítať." +
+"</p>";
+
+}
+
+}
+
+
+function renderProviderTotals(totals){
+
+const container =
+document.getElementById(
+"providerTotals"
+);
+
+container.innerHTML =
+
+"<p>" +
+"🏦 Do Banku z providerov: " +
+"<strong>" +
+formatSats(
+totals.web_sats || 0
+) +
+"</strong>" +
+"</p>" +
+
+"<p>" +
+"👤 Odmeny používateľom: " +
+"<strong>" +
+formatSats(
+totals.user_sats || 0
+) +
+"</strong>" +
+"</p>";
+
+}
+
+
 async function loadTransactions(){
 
 try{
 
-const response =
-await fetch(
-API +
+const data =
+await api(
 "/api/transactions?user_id=" +
 encodeURIComponent(USER_ID)
 );
-
-
-const data =
-await response.json();
-
-
-if(
-!response.ok ||
-!data.ok
-){
-
-throw new Error(
-"Históriu sa nepodarilo načítať."
-);
-
-}
-
 
 if(
 !data.transactions ||
@@ -972,7 +1365,6 @@ transactions.innerHTML =
 return;
 
 }
-
 
 transactions.innerHTML =
 data.transactions
@@ -991,9 +1383,7 @@ transaction.type +
 
 formatSats(
 transaction.amount_sats
-) +
-
-"<br>" +
+) +"<br>" +
 
 "<span class='small'>" +
 formatDate(
@@ -1009,8 +1399,8 @@ transaction.created_at
 )
 .join("");
 
-
-}catch(error){
+}
+catch(error){
 
 transactions.innerHTML =
 "<p class='small'>" +
@@ -1022,14 +1412,134 @@ transactions.innerHTML =
 }
 
 
+function openProvider(provider){
+
+const message =
+document.getElementById(
+"referralMessage"
+);
+
+message.className =
+"status";
+
+message.textContent =
+"ℹ️ " +
+provider +
+" ešte čaká na vloženie tvojej konkrétnej publisher URL.";
+
+}
+
+
+function setupReferral(){
+
+const base =
+window.location.origin +
+window.location.pathname;
+
+const link =
+base +
+"?ref=" +
+encodeURIComponent(USER_ID);
+
+document.getElementById(
+"referralLink"
+).value =
+link;
+
+const params =
+new URLSearchParams(
+window.location.search
+);
+
+const ref =
+params.get("ref");
+
+if(
+ref &&
+ref !== USER_ID
+){
+
+api(
+"/api/referral/set",
+{
+method:"POST",
+
+headers:{
+"Content-Type":
+"application/json"
+},
+
+body:JSON.stringify({
+
+user_id:
+USER_ID,
+
+referrer_id:
+ref
+
+})
+}
+)
+.then(() => {
+
+document.getElementById(
+"referralMessage"
+).textContent =
+"✅ Referral bol zaznamenaný.";
+
+})
+.catch(() => {});
+
+}
+
+}
+
+
+async function copyReferral(){
+
+const input =
+document.getElementById(
+"referralLink"
+);
+
+try{
+
+await navigator.clipboard.writeText(
+input.value
+);
+
+document.getElementById(
+"referralMessage"
+).textContent =
+"✅ Referral odkaz skopírovaný.";
+
+}
+catch{
+
+input.select();
+
+document.execCommand(
+"copy"
+);
+
+document.getElementById(
+"referralMessage"
+).textContent =
+"✅ Referral odkaz skopírovaný.";
+
+}
+
+}
+
+
 startMining.addEventListener(
 "click",
 startMiningCycle
 );
 
+setupReferral();
 
 loadState();
-
 
 setInterval(
 loadState,
