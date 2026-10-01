@@ -976,8 +976,8 @@ async function createWithdrawal(
     amount < MIN_WITHDRAWAL_SATS
   ) {
     throw new Error(
-      Minimum výberu je ${MIN_WITHDRAWAL_SATS} sats.
-    );
+  "Minimum výberu je " + MIN_WITHDRAWAL_SATS + " sats."
+);
   }
 
   if (!method || !address) {
