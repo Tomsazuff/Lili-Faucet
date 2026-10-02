@@ -1494,7 +1494,10 @@ window.location.search
 
 const ref =
 params.get("ref");
-
+if (ref === "lili" && USER_ID === "lili") {
+  USER_ID = "u_" + crypto.randomUUID().replace(/-/g, "");
+  localStorage.setItem("lili_user_id", USER_ID);
+  }
 if(
 ref &&
 ref !== USER_ID
