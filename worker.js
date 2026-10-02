@@ -1,4 +1,4 @@
-Pata Hutira:
+
 const OWNER = "lili";
 
 const MIN_WITHDRAWAL = 100;
