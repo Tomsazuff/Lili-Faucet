@@ -619,7 +619,16 @@ let USER_ID = localStorage.getItem("lili_user_id");
 if (referrer === "lili" && (!USER_ID || USER_ID === OWNER_ID)) {
   USER_ID = "u_" + crypto.randomUUID().replace(/-/g, "");
   localStorage.setItem("lili_user_id", USER_ID);
+const accountText = document.querySelectorAll("*");
 
+accountText.forEach(el => {
+  if (
+    el.children.length === 0 &&
+    el.textContent.trim() === "lili"
+  ) {
+    el.textContent = USER_ID;
+  }
+});
   fetch(API + "/api/referral/set", {
     method: "POST",
     headers: {"content-type": "application/json"},
