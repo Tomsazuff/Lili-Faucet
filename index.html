@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -13,20 +12,20 @@ body{
   margin:0;
   font-family:Arial,sans-serif;
   background:#f3f4f6;
-  color:#111827
+  color:#111827;
 }
 
 header{
   background:#111827;
   color:#fff;
   text-align:center;
-  padding:24px 15px
+  padding:24px 15px;
 }
 
 .container{
   max-width:900px;
   margin:20px auto;
-  padding:0 15px
+  padding:0 15px;
 }
 
 .card{
@@ -34,25 +33,25 @@ header{
   border-radius:14px;
   padding:18px;
   margin-bottom:16px;
-  box-shadow:0 3px 12px rgba(0,0,0,.08)
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
 }
 
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:12px
+  gap:12px;
 }
 
 .box{
   background:#f3f4f6;
   padding:15px;
-  border-radius:10px
+  border-radius:10px;
 }
 
 .big{
   font-size:25px;
   font-weight:bold;
-  margin-top:6px
+  margin-top:6px;
 }
 
 input,select,button{
@@ -61,7 +60,7 @@ input,select,button{
   margin-top:8px;
   border-radius:8px;
   border:1px solid #cbd5e1;
-  font:inherit
+  font:inherit;
 }
 
 button{
@@ -69,50 +68,50 @@ button{
   color:#fff;
   border:0;
   cursor:pointer;
-  font-weight:bold
+  font-weight:bold;
 }
 
 button:hover{
-  opacity:.9
+  opacity:.9;
 }
 
 nav{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:8px;
-  margin-bottom:16px
+  margin-bottom:16px;
 }
 
 .hidden{
-  display:none!important
+  display:none!important;
 }
 
 .msg{
   padding:10px;
   border-radius:8px;
-  margin-top:10px
+  margin-top:10px;
 }
 
 .success{
   background:#dcfce7;
-  color:#166534
+  color:#166534;
 }
 
 .error{
   background:#fee2e2;
-  color:#991b1b
+  color:#991b1b;
 }
 
 .cycle,.tx{
   background:#f8fafc;
   border-radius:10px;
   padding:13px;
-  margin-top:10px
+  margin-top:10px;
 }
 
 .muted{
   color:#64748b;
-  font-size:14px
+  font-size:14px;
 }
 
 pre{
@@ -122,7 +121,7 @@ pre{
   background:#111827;
   color:#fff;
   padding:12px;
-  border-radius:8px
+  border-radius:8px;
 }
 </style>
 </head>
@@ -135,8 +134,6 @@ pre{
 </header>
 
 <div class="container">
-
-<!-- AUTH -->
 
 <section id="auth">
 
@@ -183,8 +180,6 @@ Prihlásiť
 </section>
 
 
-<!-- APP -->
-
 <section id="app" class="hidden">
 
 <div class="card">
@@ -216,8 +211,6 @@ Odhlásiť
 </nav>
 
 
-<!-- BALANCE -->
-
 <div class="card">
 
 <div class="grid">
@@ -246,8 +239,6 @@ Odhlásiť
 </div>
 
 
-<!-- BANK -->
-
 <section id="bankTab">
 
 <div class="card">
@@ -259,8 +250,8 @@ Bank je hlavný zostatok účtu.
 </p>
 
 <p>
-Provider odmeny sú rozdelené:
-<strong>95 % Lili Faucet / 5 % používateľ</strong>.
+Provider odmeny sa podľa aktuálnej logiky delia:
+<strong>95 % vlastník / 5 % používateľ</strong>.
 </p>
 
 </div>
@@ -317,11 +308,11 @@ placeholder="BTC adresa / FaucetPay účet">
 <div id="withdrawMsg"></div>
 
 <p class="muted">
-Výber sa uloží ako pending.
-Automatické odoslanie BTC/FaucetPay ešte nie je pripojené.
+Žiadosť sa zatiaľ vytvorí ako pending. Automatické odoslanie výplaty bude doplnené neskôr.
 </p>
 
 </div>
+
 
 <div class="card">
 
@@ -335,8 +326,6 @@ Načítavam...
 
 </section>
 
-
-<!-- MINING -->
 
 <section id="miningTab" class="hidden">
 
@@ -392,8 +381,6 @@ placeholder="Suma z Banku do Mining">
 </div>
 
 
-<!-- CALCULATOR -->
-
 <div class="card">
 
 <h2>🧮 Živý mining kalkulátor</h2>
@@ -433,8 +420,6 @@ Výsledok
 </div>
 
 
-<!-- CYCLES -->
-
 <div class="card">
 
 <h2>📊 Mining cykly</h2>
@@ -447,8 +432,6 @@ Výsledok
 
 </section>
 
-
-<!-- PROVIDERS -->
 
 <section id="providersTab" class="hidden">
 
@@ -474,11 +457,11 @@ PTC ponuky sa načítajú cez Cloudflare Worker.
 <h2>🔌 OctoClick</h2>
 
 <p>
-OctoClick je pripravený cez serverový postback.
+OctoClick zatiaľ nie je aktívne zapojený.
 </p>
 
 <p class="muted">
-Tajné kľúče sa nikdy nevkladajú do tohto HTML súboru.
+Napojenie doplníme samostatne po overení jeho aktuálneho API/postback nastavenia.
 </p>
 
 </div>
@@ -497,65 +480,64 @@ let userId =
 localStorage.getItem("lili_user") || "";
 
 const RATES = {
-1:0.0067,
-5:0.0333,
-10:0.08,
-20:0.1667,
-30:0.2667
+  1:0.0067,
+  5:0.0333,
+  10:0.08,
+  20:0.1667,
+  30:0.2667
 };
 
 
 function $(id){
-return document.getElementById(id);
+  return document.getElementById(id);
 }
 
 
 function message(id,text,success=false){
 
-const el=$(id);
+  const el=$(id);
 
-if(!el)return;
+  if(!el)return;
 
-el.className=
-"msg "+(success?"success":"error");
+  el.className=
+    "msg "+(success?"success":"error");
 
-el.textContent=text;
-
+  el.textContent=text;
 }
 
 
 async function api(path,options={}){
 
-const response=
-await fetch(
-API+path,
-{
-...options,
-headers:{
-"Content-Type":"application/json",
-...(options.headers||{})
-}
-}
-);
+  const response=
+    await fetch(
+      API+path,
+      {
+        ...options,
+        headers:{
+          "Content-Type":"application/json",
+          ...(options.headers||{})
+        }
+      }
+    );
 
-let data;
+  let data;
 
-try{
-data=await response.json();
-}catch{
-throw new Error("Server nevrátil JSON.");
-}
+  try{
+    data=await response.json();
+  }catch{
+    throw new Error(
+      "Server nevrátil platný JSON."
+    );
+  }
 
-if(!response.ok || !data.ok){
+  if(!response.ok || !data.ok){
 
-throw new Error(
-data.error || "Serverová chyba."
-);
+    throw new Error(
+      data.error || "Serverová chyba."
+    );
+  }
 
-}
-
-return data;
-
+  return data;
 }
 
 
@@ -563,76 +545,74 @@ return data;
 
 async function register(){
 
-const id=
-$("regUser").value.trim().toLowerCase();
+  const id=
+    $("regUser").value.trim().toLowerCase();
 
-const password=
-$("regPass").value;
+  const password=
+    $("regPass").value;
 
-const ref=
-$("regRef").value.trim().toLowerCase();
+  const ref=
+    $("regRef").value.trim().toLowerCase();
 
-if(!id){
+  if(!id){
 
-message(
-"authMsg",
-"Zadaj používateľské ID."
-);
+    message(
+      "authMsg",
+      "Zadaj používateľské ID."
+    );
 
-return;
-}
+    return;
+  }
 
-if(password.length<6){
+  if(password.length<6){
 
-message(
-"authMsg",
-"Heslo musí mať aspoň 6 znakov."
-);
+    message(
+      "authMsg",
+      "Heslo musí mať aspoň 6 znakov."
+    );
 
-return;
-}
+    return;
+  }
 
-try{
+  try{
 
-const data=
-await api(
-"/api/register",
-{
-method:"POST",
-body:JSON.stringify({
-user_id:id,
-password:password,
-referrer_id:ref
-})
-}
-);
+    const data=
+      await api(
+        "/api/register",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            user_id:id,
+            password:password,
+            referrer_id:ref
+          })
+        }
+      );
 
-userId=data.user_id;
+    userId=data.user_id;
 
-localStorage.setItem(
-"lili_user",
-userId
-);
+    localStorage.setItem(
+      "lili_user",
+      userId
+    );
 
-message(
-"authMsg",
-"Registrácia úspešná.",
-true
-);
+    message(
+      "authMsg",
+      "Registrácia úspešná.",
+      true
+    );
 
-openApp();
+    openApp();
 
-await loadState();
+    await loadState();
 
-}catch(error){
+  }catch(error){
 
-message(
-"authMsg",
-error.message
-);
-
-}
-
+    message(
+      "authMsg",
+      error.message
+    );
+  }
 }
 
 
@@ -640,56 +620,54 @@ error.message
 
 async function login(){
 
-const id=
-$("loginUser").value.trim().toLowerCase();
+  const id=
+    $("loginUser").value.trim().toLowerCase();
 
-const password=
-$("loginPass").value;
+  const password=
+    $("loginPass").value;
 
-if(!id || !password){
+  if(!id || !password){
 
-message(
-"authMsg",
-"Zadaj ID a heslo."
-);
+    message(
+      "authMsg",
+      "Zadaj ID a heslo."
+    );
 
-return;
-}
+    return;
+  }
 
-try{
+  try{
 
-const data=
-await api(
-"/api/login",
-{
-method:"POST",
-body:JSON.stringify({
-user_id:id,
-password:password
-})
-}
-);
+    const data=
+      await api(
+        "/api/login",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            user_id:id,
+            password:password
+          })
+        }
+      );
 
-userId=data.user_id;
+    userId=data.user_id;
 
-localStorage.setItem(
-"lili_user",
-userId
-);
+    localStorage.setItem(
+      "lili_user",
+      userId
+    );
 
-openApp();
+    openApp();
 
-await loadState();
+    await loadState();
 
-}catch(error){
+  }catch(error){
 
-message(
-"authMsg",
-error.message
-);
-
-}
-
+    message(
+      "authMsg",
+      error.message
+    );
+  }
 }
 
 
@@ -697,47 +675,55 @@ error.message
 
 function openApp(){
 
-$("auth").classList.add("hidden");
+  $("auth").classList.add("hidden");
 
-$("app").classList.remove("hidden");
+  $("app").classList.remove("hidden");
 
-$("currentUser").textContent=
-userId;
+  $("currentUser").textContent=
+    userId;
 
-$("refLink").value=
-location.origin+
-location.pathname+
-"?ref="+
-encodeURIComponent(userId);
+  $("refLink").value=
+    location.origin+
+    location.pathname+
+    "?ref="+
+    encodeURIComponent(userId);
 
-showTab("bankTab");
-
+  showTab("bankTab");
 }
 
 
 function logout(){
 
-localStorage.removeItem("lili_user");
+  localStorage.removeItem(
+    "lili_user"
+  );
 
-userId="";
+  userId="";
 
-location.reload();
-
+  location.reload();
 }
 
 
 function showTab(id){
 
-[
-"bankTab",
-"miningTab",
-"providersTab"
-].forEach(
-x=>$(x).classList.add("hidden")
-);
+  [
+    "bankTab",
+    "miningTab",
+    "providersTab"
+  ].forEach(
+    x=>{
+      const el=$(x);
+      if(el){
+        el.classList.add("hidden");
+      }
+    }
+  );
 
-$(id).classList.remove("hidden");
+  const selected=$(id);
 
+  if(selected){
+    selected.classList.remove("hidden");
+  }
 }
 
 
@@ -745,45 +731,45 @@ $(id).classList.remove("hidden");
 
 async function loadState(){
 
-try{
+  if(!userId)return;
 
-const data=
-await api(
-"/api/state?user_id="+
-encodeURIComponent(userId)
-);
+  try{
 
-$("bank").textContent=
-Number(data.bank_sats||0)
-.toLocaleString("sk-SK")+
-" sat";
+    const data=
+      await api(
+        "/api/state?user_id="+
+        encodeURIComponent(userId)
+      );
 
-$("mining").textContent=
-Number(data.mining_sats||0)
-.toLocaleString("sk-SK")+
-" sat";
+    $("bank").textContent=
+      Number(data.bank_sats||0)
+      .toLocaleString("sk-SK")+
+      " sat";
 
-$("refCount").textContent=
-Number(data.referral_count||0);
+    $("mining").textContent=
+      Number(data.mining_sats||0)
+      .toLocaleString("sk-SK")+
+      " sat";
 
-$("server").textContent=
-"🟢 Server online";
+    $("refCount").textContent=
+      Number(data.referral_count||0);
 
-renderCycles(
-data.cycles||[]
-);
+    $("server").textContent=
+      "🟢 Server online";
 
-renderHistory(
-data.transactions||[]
-);
+    renderCycles(
+      data.cycles||[]
+    );
 
-}catch(error){
+    renderHistory(
+      data.transactions||[]
+    );
 
-$("server").textContent=
-"🔴 "+error.message;
+  }catch(error){
 
-}
-
+    $("server").textContent=
+      "🔴 "+error.message;
+  }
 }
 
 
@@ -791,36 +777,37 @@ $("server").textContent=
 
 function calculateMining(){
 
-const amount=
-Math.max(
-0,
-Number($("calcAmount").value)||0
-);
+  const amount=
+    Math.max(
+      0,
+      Number($("calcAmount").value)||0
+    );
 
-const days=
-Number($("days").value);
+  const days=
+    Number($("days").value);
 
-const rate=
-RATES[days]||0;
+  const rate=
+    RATES[days]||0;
 
-const profit=
-Math.floor(amount*rate);
+  const profit=
+    Math.floor(
+      amount*rate
+    );
 
-const total=
-amount+profit;
+  const total=
+    amount+profit;
 
-$("calcPrincipal").textContent=
-amount.toLocaleString("sk-SK")+
-" sat";
+  $("calcPrincipal").textContent=
+    amount.toLocaleString("sk-SK")+
+    " sat";
 
-$("calcProfit").textContent=
-profit.toLocaleString("sk-SK")+
-" sat";
+  $("calcProfit").textContent=
+    profit.toLocaleString("sk-SK")+
+    " sat";
 
-$("calcTotal").textContent=
-total.toLocaleString("sk-SK")+
-" sat";
-
+  $("calcTotal").textContent=
+    total.toLocaleString("sk-SK")+
+    " sat";
 }
 
 
@@ -828,41 +815,49 @@ total.toLocaleString("sk-SK")+
 
 async function toMining(){
 
-const amount=
-Number($("mineAmount").value);
+  const amount=
+    Number($("mineAmount").value);
 
-try{
+  if(!Number.isFinite(amount) || amount<=0){
 
-await api(
-"/api/bank/to-mining",
-{
-method:"POST",
-body:JSON.stringify({
-user_id:userId,
-amount_sats:amount
-})
-}
-);
+    message(
+      "miningMsg",
+      "Zadaj platnú sumu."
+    );
 
-message(
-"miningMsg",
-"Suma bola presunutá do Mining.",
-true
-);
+    return;
+  }
 
-$("mineAmount").value="";
+  try{
 
-await loadState();
+    await api(
+      "/api/bank/to-mining",
+      {
+        method:"POST",
+        body:JSON.stringify({
+          user_id:userId,
+          amount_sats:amount
+        })
+      }
+    );
 
-}catch(error){
+    message(
+      "miningMsg",
+      "Suma bola presunutá do Mining.",
+      true
+    );
 
-message(
-"miningMsg",
-error.message
-);
+    $("mineAmount").value="";
 
-}
+    await loadState();
 
+  }catch(error){
+
+    message(
+      "miningMsg",
+      error.message
+    );
+  }
 }
 
 
@@ -870,42 +865,40 @@ error.message
 
 async function startMining(){
 
-const days=
-Number($("days").value);
+  const days=
+    Number($("days").value);
 
-try{
+  try{
 
-const data=
-await api(
-"/api/mining/start",
-{
-method:"POST",
-body:JSON.stringify({
-user_id:userId,
-duration_days:days
-})
-}
-);
+    const data=
+      await api(
+        "/api/mining/start",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            user_id:userId,
+            duration_days:days
+          })
+        }
+      );
 
-message(
-"miningMsg",
-"Mining spustený. Koniec: "+
-new Date(data.ends_at)
-.toLocaleString("sk-SK"),
-true
-);
+    message(
+      "miningMsg",
+      "Mining spustený. Koniec: "+
+      new Date(data.ends_at)
+      .toLocaleString("sk-SK"),
+      true
+    );
 
-await loadState();
+    await loadState();
 
-}catch(error){
+  }catch(error){
 
-message(
-"miningMsg",
-error.message
-);
-
-}
-
+    message(
+      "miningMsg",
+      error.message
+    );
+  }
 }
 
 
@@ -913,88 +906,96 @@ error.message
 
 function renderCycles(cycles){
 
-const box=$("cycles");
+  const box=$("cycles");
 
-if(!cycles.length){
+  if(!cycles.length){
 
-box.textContent=
-"Žiadne mining cykly.";
+    box.textContent=
+      "Žiadne mining cykly.";
 
-return;
+    return;
+  }
 
-}
+  box.innerHTML=
+    cycles.map(
+      cycle=>{
 
-box.innerHTML=
-cycles.map(cycle=>{
+        const principal=
+          Number(
+            cycle.principal_sats||0
+          );
 
-const principal=
-Number(cycle.principal_sats||0);
+        const days=
+          Number(
+            cycle.duration_days||0
+          );
 
-const days=
-Number(cycle.duration_days||0);
+        const rate=
+          RATES[days]||0;
 
-const rate=
-RATES[days]||0;
+        const profit=
+          Number(
+            cycle.earned_sats ??
+            Math.floor(
+              principal*rate
+            )
+          );
 
-const profit=
-Number(
-cycle.earned_sats ??
-Math.floor(principal*rate)
-);
+        const total=
+          principal+profit;
 
-const total=
-principal+profit;
+        return `
+          <div class="cycle">
 
-return 
-<div class="cycle">
+            <strong>
+              ⛏️ Cyklus #${escapeHtml(cycle.id)}
+            </strong>
 
-<strong>
-⛏️ Cyklus #${cycle.id}
-</strong>
+            <p>
+              Vklad:
+              ${principal.toLocaleString("sk-SK")}
+              sat
+            </p>
 
-<p>
-Vklad:
-${principal.toLocaleString("sk-SK")}
-sat
-</p>
+            <p>
+              Dĺžka:
+              ${days} dní
+            </p>
 
-<p>
-Dĺžka:
-${days} dní
-</p>
+            <p>
+              Zisk:
+              ${profit.toLocaleString("sk-SK")}
+              sat
+            </p>
 
-<p>
-Zisk:
-${profit.toLocaleString("sk-SK")}
-sat
-</p>
+            <p>
+              Výsledok:
+              ${total.toLocaleString("sk-SK")}
+              sat
+            </p>
 
-<p>
-Výsledok:
-${total.toLocaleString("sk-SK")}
-sat
-</p>
+            <p>
+              Stav:
+              ${escapeHtml(cycle.status||"")}
+            </p>
 
-<p>
-Stav:
-${escapeHtml(cycle.status||"")}
-</p>
+            <p>
+              Koniec:
+              ${
+                cycle.ends_at
+                ?
+                new Date(
+                  cycle.ends_at
+                ).toLocaleString("sk-SK")
+                :
+                "-"
+              }
+            </p>
 
-<p>
-Koniec:
-${cycle.ends_at
-?
-new Date(cycle.ends_at)
-.toLocaleString("sk-SK")
-:
-"-"}
-</p>
-
-</div>
-;
-
-}).join("");
-
+          </div>
+        `;
+      }
+    ).join("");
 }
 
 
@@ -1002,47 +1003,51 @@ new Date(cycle.ends_at)
 
 function renderHistory(transactions){
 
-const box=$("history");
+  const box=$("history");
 
-if(!transactions.length){
+  if(!transactions.length){
 
-box.textContent=
-"Žiadne transakcie.";
+    box.textContent=
+      "Žiadne transakcie.";
 
-return;
-}
+    return;
+  }
 
-box.innerHTML=
-transactions.map(tx=>
+  box.innerHTML=
+    transactions.map(
+      tx=>`
 
-<div class="tx">
+        <div class="tx">
 
-<strong>
-${escapeHtml(tx.type||"")}
-</strong>
+          <strong>
+            ${escapeHtml(tx.type||"")}
+          </strong>
 
-<br>
+          <br>
 
-Suma:
-${Number(tx.amount_sats||0)
-.toLocaleString("sk-SK")}
-sat
+          Suma:
+          ${Number(tx.amount_sats||0)
+            .toLocaleString("sk-SK")}
+          sat
 
-<br>
+          <br>
 
-<span class="muted">
-${tx.created_at
-?
-new Date(tx.created_at)
-.toLocaleString("sk-SK")
-:
-""}
-</span>
+          <span class="muted">
+            ${
+              tx.created_at
+              ?
+              new Date(
+                tx.created_at
+              ).toLocaleString("sk-SK")
+              :
+              ""
+            }
+          </span>
 
-</div>
+        </div>
 
-).join("");
-
+      `
+    ).join("");
 }
 
 
@@ -1050,50 +1055,74 @@ new Date(tx.created_at)
 
 async function withdraw(){
 
-const amount=
-Number($("withdrawAmount").value);
+  const amount=
+    Number($("withdrawAmount").value);
 
-const method=
-$("withdrawMethod").value;
+  const method=
+    $("withdrawMethod").value;
 
-const address=
-$("withdrawAddress").value.trim();
+  const address=
+    $("withdrawAddress").value.trim();
 
-try{
+  if(
+    !Number.isFinite(amount) ||
+    amount<100
+  ){
 
-await api(
-"/api/withdraw",
-{
-method:"POST",
-body:JSON.stringify({
-user_id:userId,
-amount_sats:amount,
-method:method,
-address:address
-})
-}
-);
+    message(
+      "withdrawMsg",
+      "Minimum výberu je 100 sat."
+    );
 
-message(
-"withdrawMsg",
-"Žiadosť o výber bola vytvorená ako pending.",
-true
-);
+    return;
+  }
 
-$("withdrawAmount").value="";
-$("withdrawAddress").value="";
+  if(!address){
 
-await loadState();
+    message(
+      "withdrawMsg",
+      "Zadaj BTC adresu alebo FaucetPay účet."
+    );
 
-}catch(error){
+    return;
+  }
 
-message(
-"withdrawMsg",
-error.message
-);
+  try{
 
-}
+    const data=
+      await api(
+        "/api/withdraw",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            user_id:userId,
+            amount_sats:amount,
+            method:method,
+            address:address
+          })
+        }
+      );
 
+    message(
+      "withdrawMsg",
+      "Žiadosť #"+
+      data.withdrawal_id+
+      " bola vytvorená ako pending.",
+      true
+    );
+
+    $("withdrawAmount").value="";
+    $("withdrawAddress").value="";
+
+    await loadState();
+
+  }catch(error){
+
+    message(
+      "withdrawMsg",
+      error.message
+    );
+  }
 }
 
 
@@ -1101,24 +1130,23 @@ error.message
 
 async function copyReferral(){
 
-try{
+  const value=
+    $("refLink").value;
 
-await navigator.clipboard.writeText(
-$("refLink").value
-);
+  try{
 
-alert(
-"Referral link skopírovaný."
-);
+    await navigator.clipboard.writeText(
+      value
+    );
 
-}catch{
+    alert(
+      "Referral link skopírovaný."
+    );
 
-alert(
-$("refLink").value
-);
+  }catch{
 
-}
-
+    alert(value);
+  }
 }
 
 
@@ -1126,32 +1154,30 @@ $("refLink").value
 
 async function loadAoyco(){
 
-try{
+  try{
 
-const data=
-await api(
-"/api/providers/aoyco/ptc?user_id="+
-encodeURIComponent(userId)
-);
+    const data=
+      await api(
+        "/api/providers/aoyco/ptc?user_id="+
+        encodeURIComponent(userId)
+      );
 
-$("aoyco").innerHTML=
-"<pre>"+
-escapeHtml(
-JSON.stringify(
-data.data||data,
-null,
-2
-)
-)+
-"</pre>";
+    $("aoyco").innerHTML=
+      "<pre>"+
+      escapeHtml(
+        JSON.stringify(
+          data.data||data,
+          null,
+          2
+        )
+      )+
+      "</pre>";
 
-}catch(error){
+  }catch(error){
 
-$("aoyco").textContent=
-error.message;
-
-}
-
+    $("aoyco").textContent=
+      error.message;
+  }
 }
 
 
@@ -1159,24 +1185,47 @@ error.message;
 
 function escapeHtml(value){
 
-return String(value)
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 
+
+/* REFERRAL FROM URL */
+
+function loadReferralFromUrl(){
+
+  const params=
+    new URLSearchParams(
+      location.search
+    );
+
+  const ref=
+    params.get("ref");
+
+  if(
+    ref &&
+    !$("regRef").value
+  ){
+
+    $("regRef").value=
+      ref.toLowerCase();
+  }
 }
 
 
 /* START */
 
+loadReferralFromUrl();
+
 if(userId){
 
-openApp();
+  openApp();
 
-loadState();
-
+  loadState();
 }
 
 calculateMining();
