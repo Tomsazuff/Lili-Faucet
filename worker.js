@@ -23,8 +23,7 @@ const PROVIDERS = [
 
 const now = () => new Date().toISOString();
 
-const clean = v => String(v ?? "").trim();
-
+const clean = (v) => String(v ?? "").trim();
 
 function json(data, status = 200) {
   return new Response(
@@ -32,15 +31,9 @@ function json(data, status = 200) {
     {
       status,
       headers: {
-        "Content-Type":
-          "application/json; charset=UTF-8",
-
-        "Access-Control-Allow-Origin":
-          "*",
-
-        "Access-Control-Allow-Methods":
-          "GET,POST,OPTIONS",
-
+        "Content-Type": "application/json; charset=UTF-8",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         "Access-Control-Allow-Headers":
           "Content-Type, Authorization, X-Provider-Key"
       }
@@ -48,15 +41,11 @@ function json(data, status = 200) {
   );
 }
 
-
 async function body(request) {
-
   const type =
     request.headers.get("content-type") || "";
 
-  if (
-    type.includes("application/json")
-  ) {
+  if (type.includes("application/json")) {
     return await request.json();
   }
 
@@ -65,9 +54,7 @@ async function body(request) {
   );
 }
 
-
 async function sha256(value) {
-
   const digest =
     await crypto.subtle.digest(
       "SHA-256",
@@ -78,15 +65,12 @@ async function sha256(value) {
 
   return [...new Uint8Array(digest)]
     .map(
-      x =>
-        x.toString(16).padStart(2, "0")
+      x => x.toString(16).padStart(2, "0")
     )
     .join("");
 }
 
-
 function randomToken() {
-
   const bytes =
     new Uint8Array(32);
 
@@ -94,15 +78,12 @@ function randomToken() {
 
   return [...bytes]
     .map(
-      x =>
-        x.toString(16).padStart(2, "0")
+      x => x.toString(16).padStart(2, "0")
     )
     .join("");
 }
 
-
 function validUserId(value) {
-
   const id =
     clean(value).toLowerCase();
 
@@ -117,9 +98,7 @@ function validUserId(value) {
   return id;
 }
 
-
 function validEmail(value) {
-
   const email =
     clean(value).toLowerCase();
 
@@ -139,10 +118,25 @@ function validEmail(value) {
    DATABASE
 ===================================================== */
 
+async function addColumn(
+  db,
+  table,
+  column,
+  definition
+) {
+  try {
+    await db.prepare(
+      ALTER TABLE ${table}
+       ADD COLUMN ${column} ${definition}
+    ).run();
+  } catch {}
+}
+
+
 async function schema(db) {
 
   await db.prepare(
-    CREATE TABLE IF NOT EXISTS users(
+    CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       bank_sats INTEGER NOT NULL DEFAULT 0,
       mining_sats INTEGER NOT NULL DEFAULT 0,
@@ -154,38 +148,51 @@ async function schema(db) {
   ).run();
 
 
-  try {
+  await addColumn(
+    db,
+    "users",
+    "bank_sats",
+    "INTEGER NOT NULL DEFAULT 0"
+  );
 
-    await db.prepare(
-      ALTER TABLE users
-      ADD COLUMN password_hash TEXT
-    ).run();
+  await addColumn(
+    db,
+    "users",
+    "mining_sats",
+    "INTEGER NOT NULL DEFAULT 0"
+  );
 
-  } catch {}
+  await addColumn(
+    db,
+    "users",
+    "created_at",
+    "TEXT"
+  );
 
+  await addColumn(
+    db,
+    "users",
+    "password_hash",
+    "TEXT"
+  );
 
-  try {
+  await addColumn(
+    db,
+    "users",
+    "is_registered",
+    "INTEGER NOT NULL DEFAULT 0"
+  );
 
-    await db.prepare(
-      ALTER TABLE users
-      ADD COLUMN is_registered INTEGER NOT NULL DEFAULT 0
-    ).run();
-
-  } catch {}
-
-
-  try {
-
-    await db.prepare(
-      ALTER TABLE users
-      ADD COLUMN email TEXT
-    ).run();
-
-  } catch {}
+  await addColumn(
+    db,
+    "users",
+    "email",
+    "TEXT"
+  );
 
 
   await db.prepare(
-    CREATE TABLE IF NOT EXISTS sessions(
+    CREATE TABLE IF NOT EXISTS sessions (
       token_hash TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       expires_at TEXT NOT NULL,
@@ -195,7 +202,7 @@ async function schema(db) {
 
 
   await db.prepare(
-    CREATE TABLE IF NOT EXISTS referrals(
+    CREATE TABLE IF NOT EXISTS referrals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT UNIQUE NOT NULL,
       referrer_id TEXT NOT NULL,
@@ -205,7 +212,7 @@ async function schema(db) {
 
 
   await db.prepare(
-    CREATE TABLE IF NOT EXISTS mining_cycles(
+    CREATE TABLE IF NOT EXISTS mining_cycles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,
       principal_sats INTEGER NOT NULL,
@@ -219,11 +226,9 @@ async function schema(db) {
     )
   ).run();
 
-
-  await db.prepare(`
-    CREATE TABLE IF NOT EXISTS transactions(
-
-id INTEGER PRIMARY KEY AUTOINCREMENT,
+await db.prepare(
+    CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,
       type TEXT NOT NULL,
       amount_sats INTEGER NOT NULL,
@@ -236,7 +241,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 
 
   await db.prepare(
-    CREATE TABLE IF NOT EXISTS provider_earnings(
+    CREATE TABLE IF NOT EXISTS provider_earnings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       provider TEXT NOT NULL,
       user_id TEXT NOT NULL,
@@ -251,7 +256,7 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 
 
   await db.prepare(
-    CREATE TABLE IF NOT EXISTS withdrawals(
+    CREATE TABLE IF NOT EXISTS withdrawals (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id TEXT NOT NULL,
       amount_sats INTEGER NOT NULL,
@@ -277,14 +282,13 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,
 
 async function getUser(db, id) {
 
-  return db
-    .prepare(
-      SELECT *
-      FROM users
-      WHERE id=?
-    )
-    .bind(id)
-    .first();
+  return db.prepare(
+    SELECT *
+    FROM users
+    WHERE id=?
+  )
+  .bind(id)
+  .first();
 }
 
 
@@ -294,26 +298,28 @@ async function ensureUser(db, id) {
     clean(id).toLowerCase();
 
   let user =
-    await getUser(db, id);
+    await getUser(
+      db,
+      id
+    );
 
   if (!user) {
 
-    await db
-      .prepare(
-        INSERT INTO users(
-          id,
-          bank_sats,
-          mining_sats,
-          created_at,
-          is_registered
-        )
-        VALUES(?,0,0,?,0)
-      )
-      .bind(
+    await db.prepare(
+      INSERT INTO users (
         id,
-        now()
+        bank_sats,
+        mining_sats,
+        created_at,
+        is_registered
       )
-      .run();
+      VALUES (?, 0, 0, ?, 0)
+    )
+    .bind(
+      id,
+      now()
+    )
+    .run();
 
     user =
       await getUser(
@@ -347,23 +353,22 @@ async function createSession(
       30 * 86400000
     ).toISOString();
 
-  await db
-    .prepare(
-      INSERT INTO sessions(
-        token_hash,
-        user_id,
-        expires_at,
-        created_at
-      )
-      VALUES(?,?,?,?)
+  await db.prepare(
+    INSERT INTO sessions (
+      token_hash,
+      user_id,
+      expires_at,
+      created_at
     )
-    .bind(
-      hash,
-      userId,
-      expires,
-      now()
-    )
-    .run();
+    VALUES (?, ?, ?, ?)
+  )
+  .bind(
+    hash,
+    userId,
+    expires,
+    now()
+  )
+  .run();
 
   return raw;
 }
@@ -380,9 +385,10 @@ async function auth(
     ) || "";
 
   if (
-    !header.startsWith("Bearer ")
+    !header.startsWith(
+      "Bearer "
+    )
   ) {
-
     throw json(
       {
         ok: false,
@@ -402,21 +408,19 @@ async function auth(
     await sha256(raw);
 
   const session =
-    await db
-      .prepare(
-        SELECT *
-        FROM sessions
-        WHERE token_hash=?
-        AND expires_at>?
-      `)
-      .bind(
-        hash,
-        now()
-      )
-      .first();
+    await db.prepare(
+      SELECT *
+      FROM sessions
+      WHERE token_hash=?
+      AND expires_at>?
+    )
+    .bind(
+      hash,
+      now()
+    )
+    .first();
 
   if (!session) {
-
     throw json(
       {
         ok: false,
@@ -444,23 +448,31 @@ async function register(
 ) {
 
   const id =
-    validUserId(userId);
+    validUserId(
+      userId
+    );
 
   const em =
-    validEmail(email);
+    validEmail(
+      email
+    );
 
   const pass =
-    String(password ?? "");
+    String(
+      password ?? ""
+    );
 
-  if (pass.length < 6) {
-
+  if (
+    pass.length < 6
+  ) {
     throw new Error(
       "Heslo musí mať aspoň 6 znakov."
     );
   }
 
-  if (id === OWNER) {
-
+  if (
+    id === OWNER
+  ) {
     throw new Error(
       "Toto ID je vyhradené."
     );
@@ -478,82 +490,82 @@ async function register(
       user.is_registered || 0
     ) === 1
   ) {
-
     throw new Error(
       "Tento používateľ už existuje."
     );
   }
 
 const emailExisting =
-    await db
-      .prepare(
-        SELECT id
-        FROM users
-        WHERE lower(email)=?
-        AND is_registered=1
-      )
-      .bind(em)
-      .first();
+    await db.prepare(
+      SELECT id
+      FROM users
+      WHERE lower(email)=?
+      AND is_registered=1
+      LIMIT 1
+    )
+    .bind(em)
+    .first();
 
   if (
     emailExisting &&
     emailExisting.id !== id
   ) {
-
     throw new Error(
       "Tento e-mail už existuje."
     );
   }
 
   const passwordHash =
-    await sha256(pass);
+    await sha256(
+      pass
+    );
 
   if (user) {
 
-    await db
-      .prepare(
-        UPDATE users
-        SET
-          password_hash=?,
-          email=?,
-          is_registered=1
-        WHERE id=?
-      )
-      .bind(
-        passwordHash,
-        em,
-        id
-      )
-      .run();
+    await db.prepare(
+      UPDATE users
+      SET
+        password_hash=?,
+        email=?,
+        is_registered=1
+      WHERE id=?
+    )
+    .bind(
+      passwordHash,
+      em,
+      id
+    )
+    .run();
 
   } else {
 
-    await db
-      .prepare(
-        INSERT INTO users(
-          id,
-          bank_sats,
-          mining_sats,
-          created_at,
-          password_hash,
-          is_registered,
-          email
-        )
-        VALUES(?,0,0,?,?,1,?)
-      )
-      .bind(
+    await db.prepare(
+      INSERT INTO users (
         id,
-        now(),
-        passwordHash,
-        em
+        bank_sats,
+        mining_sats,
+        created_at,
+        password_hash,
+        is_registered,
+        email
       )
-      .run();
+      VALUES (?, 0, 0, ?, ?, 1, ?)
+    )
+    .bind(
+      id,
+      now(),
+      passwordHash,
+      em
+    )
+    .run();
   }
 
 
   referrer =
-    clean(referrer)
-      .toLowerCase();
+    clean(
+      referrer
+    ).toLowerCase();
+
 
   if (
     referrer &&
@@ -574,39 +586,38 @@ const emailExisting =
     ) {
 
       const already =
-        await db
-          .prepare(
-            SELECT id
-            FROM referrals
-            WHERE user_id=?
-          )
-          .bind(id)
-          .first();
+        await db.prepare(
+          SELECT id
+          FROM referrals
+          WHERE user_id=?
+        )
+        .bind(id)
+        .first();
 
       if (!already) {
 
-        await db
-          .prepare(
-            INSERT INTO referrals(
-              user_id,
-              referrer_id,
-              created_at
-            )
-            VALUES(?,?,?)
+        await db.prepare(
+          INSERT INTO referrals (
+            user_id,
+            referrer_id,
+            created_at
           )
-          .bind(
-            id,
-            referrer,
-            now()
-          )
-          .run();
+          VALUES (?, ?, ?)
+        )
+        .bind(
+          id,
+          referrer,
+          now()
+        )
+        .run();
       }
     }
   }
 
 
   return {
-    user_id: id,
+    user_id:
+      id,
 
     token:
       await createSession(
@@ -627,25 +638,25 @@ async function login(
   password
 ) {
 
-  const login =
-    clean(loginValue)
-      .toLowerCase();
+  const loginClean =
+    clean(
+      loginValue
+    ).toLowerCase();
 
   const user =
-    await db
-      .prepare(
-        SELECT *
-        FROM users
-        WHERE
-          lower(id)=?
-          OR lower(email)=?
-        LIMIT 1
-      )
-      .bind(
-        login,
-        login
-      )
-      .first();
+    await db.prepare(
+      SELECT *
+      FROM users
+      WHERE
+        lower(id)=?
+        OR lower(email)=?
+      LIMIT 1
+    )
+    .bind(
+      loginClean,
+      loginClean
+    )
+    .first();
 
   if (
     !user ||
@@ -653,27 +664,28 @@ async function login(
       user.is_registered || 0
     ) !== 1
   ) {
-
     throw new Error(
       "Účet neexistuje."
     );
   }
 
   const passwordHash =
-    await sha256(password);
+    await sha256(
+      password
+    );
 
   if (
     user.password_hash !==
     passwordHash
   ) {
-
     throw new Error(
       "Nesprávne heslo."
     );
   }
 
   return {
-    user_id: user.id,
+    user_id:
+      user.id,
 
     token:
       await createSession(
@@ -694,15 +706,15 @@ async function accrueMining(
 ) {
 
   const result =
-    await db
-      .prepare(
-        SELECT *
-        FROM mining_cycles
-        WHERE user_id=?
-        AND status='active'
-      )
-      .bind(userId)
-      .all();
+    await db.prepare(
+      SELECT *
+      FROM mining_cycles
+      WHERE user_id=?
+      AND status='active'
+    )
+    .bind(userId)
+    .all();
+
 
   for (
     const cycle of
@@ -718,6 +730,14 @@ async function accrueMining(
       new Date(
         cycle.ends_at
       ).getTime();
+
+    if (
+      !Number.isFinite(start) ||
+      !Number.isFinite(end) ||
+      end <= start
+    ) {
+      continue;
+    }
 
     const progress =
       Math.min(
@@ -747,7 +767,8 @@ async function accrueMining(
 
     const earned =
       Math.floor(
-        target * progress
+        target *
+        progress
       );
 
     const old =
@@ -762,49 +783,38 @@ async function accrueMining(
       difference > 0
     ) {
 
-      await db.batch([
-
-db
-          .prepare(
-            UPDATE mining_cycles
-            SET earned_sats=?
-            WHERE id=?
-            AND status='active'
-          )
-          .bind(
-            earned,
-            cycle.id
-          ),
-
-        db
-          .prepare(
-            UPDATE users
-            SET mining_sats=mining_sats+?
-            WHERE id=?
-          )
-          .bind(
-            difference,
-            userId
-          )
-
-      ]);
+await db.prepare(
+        UPDATE mining_cycles
+        SET earned_sats=?
+        WHERE id=?
+        AND status='active'
+      )
+      .bind(
+        earned,
+        cycle.id
+      )
+      .run();
     }
   }
 }
 
 
-async function releaseFinished(db) {
+async function releaseFinished(
+  db
+) {
 
   const result =
-    await db
-      .prepare(
-        SELECT *
-        FROM mining_cycles
-        WHERE status='active'
-        AND ends_at<=?
-      )
-      .bind(now())
-      .all();
+    await db.prepare(
+      SELECT *
+      FROM mining_cycles
+      WHERE status='active'
+      AND ends_at<=?
+    )
+    .bind(
+      now()
+    )
+    .all();
+
 
   for (
     const cycle of
@@ -816,86 +826,86 @@ async function releaseFinished(db) {
       cycle.user_id
     );
 
+
     const current =
-      await db
-        .prepare(
-          SELECT *
-          FROM mining_cycles
-          WHERE id=?
-          AND status='active'
-        )
-        .bind(cycle.id)
-        .first();
+      await db.prepare(
+        SELECT *
+        FROM mining_cycles
+        WHERE id=?
+        AND status='active'
+      )
+      .bind(
+        cycle.id
+      )
+      .first();
 
     if (!current) {
       continue;
     }
+
 
     const earned =
       Number(
         current.earned_sats || 0
       );
 
-    const total =
+    const principal =
       Number(
         current.principal_sats || 0
-      ) +
+      );
+
+    const total =
+      principal +
       earned;
+
 
     await db.batch([
 
-      db
-        .prepare(
-          UPDATE users
-          SET
-            bank_sats=bank_sats+?,
-            mining_sats=MAX(
-              0,
-              mining_sats-?
-            )
-          WHERE id=?
-        )
-        .bind(
-          total,
-          earned,
-          current.user_id
-        ),
+      db.prepare(
+        UPDATE users
+        SET bank_sats=bank_sats+?
+        WHERE id=?
+      )
+      .bind(
+        total,
+        current.user_id
+      ),
 
-      db
-        .prepare(
-          UPDATE mining_cycles
-          SET
-            status='released',
-            released_at=?
-          WHERE id=?
-        )
-        .bind(
-          now(),
-          current.id
-        ),
+      db.prepare(
+        UPDATE mining_cycles
+        SET
+          status='released',
+          released_at=?
+        WHERE id=?
+        AND status='active'
+      )
+      .bind(
+        now(),
+        current.id
+      ),
 
-      db
-        .prepare(
-          INSERT INTO transactions(
-            user_id,
-            type,
-            amount_sats,
-            bank_change_sats,
-            mining_change_sats,
-            reference,
-            created_at
-          )
-          VALUES(?,?,?,?,?,?,?)
+      db.prepare(
+        INSERT INTO transactions (
+          user_id,
+          type,
+          amount_sats,
+          bank_change_sats,
+          mining_change_sats,
+          reference,
+          created_at
         )
-        .bind(
-          current.user_id,
-          "MINING_RELEASE",
-          total,
-          total,
-          -earned,
-          "cycle:" + current.id,
-          now()
-        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      )
+      .bind(
+        current.user_id,
+        "MINING_RELEASE",
+        total,
+        total,
+        0,
+        "cycle:" +
+          current.id,
+        now()
+      )
 
     ]);
   }
@@ -932,15 +942,14 @@ async function state(
     );
 
   const cycles =
-    await db
-      .prepare(
-        SELECT *
-        FROM mining_cycles
-        WHERE user_id=?
-        ORDER BY id DESC
-      )
-      .bind(userId)
-      .all();
+    await db.prepare(
+      SELECT *
+      FROM mining_cycles
+      WHERE user_id=?
+      ORDER BY id DESC
+    )
+    .bind(userId)
+    .all();
 
   return {
 
@@ -959,7 +968,6 @@ async function state(
 
     cycles:
       cycles.results || []
-
   };
 }
 
@@ -983,7 +991,6 @@ async function bankToMining(
     !Number.isFinite(amount) ||
     amount <= 0
   ) {
-
     throw new Error(
       "Neplatná suma."
     );
@@ -1000,52 +1007,51 @@ async function bankToMining(
       user.bank_sats || 0
     ) < amount
   ) {
-
     throw new Error(
       "V Banku nemáš dostatok sat."
     );
   }
 
+
   await db.batch([
 
-    db
-      .prepare(
-        UPDATE users
-        SET
-          bank_sats=bank_sats-?,
-          mining_sats=mining_sats+?
-        WHERE id=?
-      )
-      .bind(
-        amount,
-        amount,
-        userId
-      ),
+    db.prepare(
+      UPDATE users
+      SET
+        bank_sats=bank_sats-?,
+        mining_sats=mining_sats+?
+      WHERE id=?
+    )
+    .bind(
+      amount,
+      amount,
+      userId
+    ),
 
-db
-      .prepare(
-        INSERT INTO transactions(
-          user_id,
-          type,
-          amount_sats,
-          bank_change_sats,
-          mining_change_sats,
-          reference,
-          created_at
-        )
-        VALUES(?,?,?,?,?,?,?)
+    db.prepare(
+      INSERT INTO transactions (
+        user_id,
+        type,
+        amount_sats,
+        bank_change_sats,
+        mining_change_sats,
+        reference,
+        created_at
       )
-      .bind(
-        userId,
-        "BANK_TO_MINING",
-        amount,
-        -amount,
-        amount,
-        "bank_to_mining",
-        now()
-      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    )
+    .bind(
+      userId,
+      "BANK_TO_MINING",
+      amount,
+      -amount,
+      amount,
+      "bank_to_mining",
+      now()
+    )
 
   ]);
+
 
   return {
     amount_sats:
@@ -1067,14 +1073,16 @@ async function startMining(
   days =
     Number(days);
 
-  if (
-    !ALLOWED_DAYS.includes(days)
+if (
+    !ALLOWED_DAYS.includes(
+      days
+    )
   ) {
-
     throw new Error(
       "Povolené obdobia: 1, 5, 10, 20 alebo 30 dní."
     );
   }
+
 
   await accrueMining(
     db,
@@ -1084,6 +1092,7 @@ async function startMining(
   await releaseFinished(
     db
   );
+
 
   const user =
     await getUser(
@@ -1096,12 +1105,15 @@ async function startMining(
       user.mining_sats || 0
     );
 
-  if (amount <= 0) {
 
+  if (
+    amount <= 0
+  ) {
     throw new Error(
       "V Mining nemáš žiadne sat."
     );
   }
+
 
   const start =
     new Date();
@@ -1109,75 +1121,77 @@ async function startMining(
   const end =
     new Date(
       start.getTime() +
-      days * 86400000
+      days *
+      86400000
     );
 
   const rate =
     MINING_RATES[days];
 
+
   const result =
-    await db
-      .prepare(
-        INSERT INTO mining_cycles(
-          user_id,
-          principal_sats,
-          duration_days,
-          rate,
-          earned_sats,
-          started_at,
-          ends_at,
-          status
-        )
-        VALUES(?,?,?,?,0,?,?,?)
-      )
-      .bind(
-        userId,
-        amount,
-        days,
+    await db.prepare(
+      INSERT INTO mining_cycles (
+        user_id,
+        principal_sats,
+        duration_days,
         rate,
-        start.toISOString(),
-        end.toISOString(),
-        "active"
+        earned_sats,
+        started_at,
+        ends_at,
+        status
       )
-      .run();
+      VALUES (?, ?, ?, ?, 0, ?, ?, 'active')
+    )
+    .bind(
+      userId,
+      amount,
+      days,
+      rate,
+      start.toISOString(),
+      end.toISOString()
+    )
+    .run();
+
 
   const cycleId =
     result.meta.last_row_id;
 
+
   await db.batch([
 
-    db
-      .prepare(
-        UPDATE users
-        SET mining_sats=0
-        WHERE id=?
-      )
-      .bind(userId),
+    db.prepare(
+      UPDATE users
+      SET mining_sats=0
+      WHERE id=?
+    )
+    .bind(userId),
 
-    db
-      .prepare(
-        INSERT INTO transactions(
-          user_id,
-          type,
-          amount_sats,
-          bank_change_sats,
-          mining_change_sats,
-          reference,
-          created_at
-        )
-        VALUES(?,?,?,?,?,?,?)
+    db.prepare(
+      INSERT INTO transactions (
+        user_id,
+        type,
+        amount_sats,
+        bank_change_sats,
+        mining_change_sats,
+        reference,
+        created_at
       )
-      .bind(
-        userId,
-        "MINING_START",
-        amount,
-        0,
-        -amount,
-        "cycle:" + cycleId,
-        now()
-      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    )
+    .bind(
+      userId,
+      "MINING_START",
+      amount,
+      0,
+      -amount,
+      "cycle:" +
+        cycleId,
+      now()
+    )
 
   ]);
+
 
   return {
 
@@ -1195,7 +1209,6 @@ async function startMining(
 
     ends_at:
       end.toISOString()
-
   };
 }
 
@@ -1211,31 +1224,46 @@ async function providerPostback(
 ) {
 
   provider =
-    clean(provider)
-      .toLowerCase();
+    clean(
+      provider
+    ).toLowerCase();
+
 
   if (
-    !PROVIDERS.includes(provider)
+    !PROVIDERS.includes(
+      provider
+    )
   ) {
-
     throw new Error(
       "Provider musí byť Aoyco alebo OctoClick."
     );
   }
 
+
   const userId =
-    clean(data.user_id)
-      .toLowerCase();
+    clean(
+      data.user_id
+    ).toLowerCase();
+
 
   const providerRef =
-    clean(data.provider_ref);
+    clean(
+      data.provider_ref ||
+      data.transaction_id ||
+      data.txid ||
+      data.id
+    );
+
 
   const publisherSats =
     Math.floor(
       Number(
-        data.publisher_sats
+        data.publisher_sats ??
+        data.amount_sats ??
+        data.amount
       )
     );
+
 
   if (
     !userId ||
@@ -1245,29 +1273,31 @@ async function providerPostback(
     ) ||
     publisherSats <= 0
   ) {
-
     throw new Error(
       "Neplatný provider postback."
     );
   }
 
+
   const duplicate =
-    await db
-      .prepare(
-        SELECT id
-        FROM provider_earnings
-        WHERE provider_ref=?
-      )
-      .bind(providerRef)
-      .first();
+    await db.prepare(
+      SELECT id
+      FROM provider_earnings
+      WHERE provider_ref=?
+    )
+    .bind(
+      providerRef
+    )
+    .first();
+
 
   if (duplicate) {
-
     return {
       duplicate:
         true
     };
   }
+
 
   const user =
     await getUser(
@@ -1275,17 +1305,18 @@ async function providerPostback(
       userId
     );
 
+
   if (
     !user ||
     Number(
       user.is_registered || 0
     ) !== 1
   ) {
-
     throw new Error(
       "Používateľ pre provider neexistuje."
     );
   }
+
 
   const webSats =
     Math.floor(
@@ -1297,111 +1328,106 @@ async function providerPostback(
     publisherSats -
     webSats;
 
+
   await db.batch([
 
-db
-      .prepare(
-        INSERT INTO provider_earnings(
-          provider,
-          user_id,
-          provider_ref,
-          publisher_sats,
-          web_sats,
-          user_sats,
-          status,
-          created_at
-        )
-        VALUES(?,?,?,?,?,?,?,?)
-      )
-      .bind(
+    db.prepare(
+      INSERT INTO provider_earnings (
         provider,
-        userId,
+        user_id,
+        provider_ref,
+        publisher_sats,
+        web_sats,
+        user_sats,
+        status,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    )
+    .bind(
+      provider,
+      userId,
+      providerRef,
+      publisherSats,
+      webSats,
+      userSats,
+      "confirmed",
+      now()
+    ),
+
+
+    db.prepare(
+      UPDATE users
+      SET bank_sats=bank_sats+?
+      WHERE id=?
+    )
+    .bind(
+      webSats,
+      OWNER
+    ),
+
+db.prepare(
+      INSERT INTO transactions (
+        user_id,
+        type,
+        amount_sats,
+        bank_change_sats,
+        mining_change_sats,
+        reference,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    )
+    .bind(
+      OWNER,
+      "PROVIDER_WEB",
+      webSats,
+      webSats,
+      0,
+      provider +
+        ":" +
         providerRef,
-        publisherSats,
-        webSats,
-        userSats,
-        "confirmed",
-        now()
-      ),
+      now()
+    ),
 
-    db
-      .prepare(
-        UPDATE users
-        SET bank_sats=bank_sats+?
-        WHERE id=?
-      )
-      .bind(
-        webSats,
-        OWNER
-      ),
 
-    db
-      .prepare(
-        INSERT INTO transactions(
-          user_id,
-          type,
-          amount_sats,
-          bank_change_sats,
-          mining_change_sats,
-          reference,
-          created_at
-        )
-        VALUES(?,?,?,?,?,?,?)
+    db.prepare(
+      UPDATE users
+      SET bank_sats=bank_sats+?
+      WHERE id=?
+    )
+    .bind(
+      userSats,
+      userId
+    ),
+
+
+    db.prepare(
+      INSERT INTO transactions (
+        user_id,
+        type,
+        amount_sats,
+        bank_change_sats,
+        mining_change_sats,
+        reference,
+        created_at
       )
-      .bind(
-        OWNER,
-        "PROVIDER_WEB",
-        webSats,
-        webSats,
-        0,
-        provider + ":" + providerRef,
-        now()
-      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    )
+    .bind(
+      userId,
+      "PROVIDER_REWARD",
+      userSats,
+      userSats,
+      0,
+      provider +
+        ":" +
+        providerRef,
+      now()
+    )
 
   ]);
 
-  if (
-    userSats > 0
-  ) {
-
-    await db.batch([
-
-      db
-        .prepare(
-          UPDATE users
-          SET bank_sats=bank_sats+?
-          WHERE id=?
-        )
-        .bind(
-          userSats,
-          userId
-        ),
-
-      db
-        .prepare(
-          INSERT INTO transactions(
-            user_id,
-            type,
-            amount_sats,
-            bank_change_sats,
-            mining_change_sats,
-            reference,
-            created_at
-          )
-          VALUES(?,?,?,?,?,?,?)
-        )
-        .bind(
-          userId,
-          "PROVIDER_REWARD",
-          userSats,
-          userSats,
-          0,
-          provider + ":" + providerRef,
-          now()
-        )
-
-    ]);
-  }
 
   return {
 
@@ -1419,7 +1445,6 @@ db
 
     user_sats:
       userSats
-
   };
 }
 
@@ -1441,25 +1466,27 @@ async function withdraw(
       Number(amount)
     );
 
+
   if (
     !Number.isFinite(amount) ||
     amount < MIN_WITHDRAWAL
   ) {
-
     throw new Error(
       "Minimum výberu je 100 sat."
     );
   }
 
+
   address =
     clean(address);
 
-  if (!address) {
 
+  if (!address) {
     throw new Error(
       "Zadaj BTC adresu alebo FaucetPay cieľ."
     );
   }
+
 
   const user =
     await getUser(
@@ -1467,80 +1494,84 @@ async function withdraw(
       userId
     );
 
+
   if (
     Number(
       user.bank_sats || 0
     ) < amount
   ) {
-
     throw new Error(
       "V Banku nemáš dostatok sat."
     );
   }
 
+
   const result =
-    await db
-      .prepare(
-        INSERT INTO withdrawals(
-          user_id,
-          amount_sats,
-          method,
-          address,
-          status,
-          created_at
-        )
-        VALUES(?,?,?,?,?,?)
-      )
-      .bind(
-        userId,
-        amount,
-        clean(method) || "BTC",
+    await db.prepare(
+      INSERT INTO withdrawals (
+        user_id,
+        amount_sats,
+        method,
         address,
-        "pending",
-        now()
+        status,
+        created_at
       )
-      .run();
+      VALUES (?, ?, ?, ?, 'pending', ?)
+    )
+    .bind(
+      userId,
+      amount,
+      clean(method) || "BTC",
+      address,
+      now()
+    )
+    .run();
+
 
   const id =
     result.meta.last_row_id;
 
+
   await db.batch([
 
-    db
-      .prepare(
-        UPDATE users
-        SET bank_sats=bank_sats-?
-        WHERE id=?
-      )
-      .bind(
-        amount,
-        userId
-      ),
+    db.prepare(
+      UPDATE users
+      SET bank_sats=bank_sats-?
+      WHERE id=?
+      AND bank_sats>=?
+    )
+    .bind(
+      amount,
+      userId,
+      amount
+    ),
 
-    db
-      .prepare(
-        INSERT INTO transactions(
-          user_id,
-          type,
-          amount_sats,
-          bank_change_sats,
-          mining_change_sats,
-          reference,
-          created_at
-        )
-        VALUES(?,?,?,?,?,?,?)
+
+    db.prepare(
+      INSERT INTO transactions (
+        user_id,
+        type,
+        amount_sats,
+        bank_change_sats,
+        mining_change_sats,
+        reference,
+        created_at
       )
-      .bind(
-        userId,
-        "WITHDRAWAL_PENDING",
-        amount,
-        -amount,
-        0,
-        "withdrawal:" + id,
-        now()
-      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    )
+    .bind(
+      userId,
+      "WITHDRAWAL_PENDING",
+      amount,
+      -amount,
+      0,
+      "withdrawal:" +
+        id,
+      now()
+    )
 
   ]);
+
 
   return {
 
@@ -1552,7 +1583,6 @@ async function withdraw(
 
     status:
       "pending"
-
   };
 }
 
@@ -1566,24 +1596,26 @@ async function transactions(
   userId
 ) {
 
-const result =
-    await db
-      .prepare(
-        SELECT
-          id,
-          type,
-          amount_sats,
-          bank_change_sats,
-          mining_change_sats,
-          reference,
-          created_at
-        FROM transactions
-        WHERE user_id=?
-        ORDER BY id DESC
-        LIMIT 100
-      )
-      .bind(userId)
-      .all();
+  const result =
+    await db.prepare(
+      SELECT
+        id,
+        type,
+        amount_sats,
+        bank_change_sats,
+        mining_change_sats,
+        reference,
+        created_at
+      FROM transactions
+      WHERE user_id=?
+      ORDER BY id DESC
+      LIMIT 100
+    )
+    .bind(
+      userId
+    )
+    .all();
+
 
   return {
     transactions:
@@ -1602,7 +1634,6 @@ async function route(
 ) {
 
   if (!env.DB) {
-
     return json(
       {
         ok: false,
@@ -1612,6 +1643,7 @@ async function route(
       500
     );
   }
+
 
   const db =
     env.DB;
@@ -1627,18 +1659,18 @@ async function route(
   const method =
     request.method.toUpperCase();
 
-
-  if (
+if (
     method === "OPTIONS"
   ) {
-
     return json({
       ok: true
     });
   }
 
 
-  await schema(db);
+  await schema(
+    db
+  );
 
 
   /* ROOT */
@@ -1659,9 +1691,10 @@ async function route(
         "online",
 
       version:
-        "4.0.0",
+        "5.0.0",
 
       publisher_split: {
+
         web:
           WEB_SHARE,
 
@@ -1692,7 +1725,9 @@ async function route(
     try {
 
       const b =
-        await body(request);
+        await body(
+          request
+        );
 
       return json({
 
@@ -1732,7 +1767,9 @@ async function route(
     try {
 
       const b =
-        await body(request);
+        await body(
+          request
+        );
 
       return json({
 
@@ -1781,6 +1818,7 @@ async function route(
         )
       );
 
+
     if (
       !secret ||
       supplied !== secret
@@ -1796,6 +1834,7 @@ async function route(
       );
     }
 
+
     try {
 
       const provider =
@@ -1804,7 +1843,10 @@ async function route(
         );
 
       const b =
-        await body(request);
+        await body(
+          request
+        );
+
 
       return json({
 
@@ -1891,26 +1933,42 @@ async function route(
     path === "/api/referrals"
   ) {
 
-const result =
-      await db
-        .prepare(
+    try {
+
+      const result =
+        await db.prepare(
           SELECT COUNT(*) AS count
           FROM referrals
           WHERE referrer_id=?
         )
-        .bind(userId)
+        .bind(
+          userId
+        )
         .first();
 
-    return json({
 
-      ok: true,
+      return json({
 
-      count:
-        Number(
-          result?.count || 0
-        )
+        ok: true,
 
-    });
+        count:
+          Number(
+            result?.count || 0
+          )
+
+      });
+
+    } catch (e) {
+
+      return json(
+        {
+          ok: false,
+          error:
+            e.message
+        },
+        500
+      );
+    }
   }
 
 
@@ -1924,7 +1982,10 @@ const result =
     try {
 
       const b =
-        await body(request);
+        await body(
+          request
+        );
+
 
       return json({
 
@@ -1954,7 +2015,7 @@ const result =
 
   /* START MINING */
 
-  if (
+if (
     method === "POST" &&
     path === "/api/mining/start"
   ) {
@@ -1962,7 +2023,10 @@ const result =
     try {
 
       const b =
-        await body(request);
+        await body(
+          request
+        );
+
 
       return json({
 
@@ -2000,7 +2064,10 @@ const result =
     try {
 
       const b =
-        await body(request);
+        await body(
+          request
+        );
+
 
       return json({
 
@@ -2119,6 +2186,7 @@ export default {
     if (!env.DB) {
       return;
     }
+
 
     ctx.waitUntil(
 
