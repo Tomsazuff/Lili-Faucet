@@ -1,4 +1,4 @@
-
+Pata Hutira:
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -7,7 +7,9 @@
 <title>Lili Faucet</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
 
 body{
   margin:0;
@@ -28,6 +30,10 @@ header h1{
   font-size:30px;
 }
 
+header p{
+  margin:0;
+}
+
 .container{
   max-width:760px;
   margin:20px auto;
@@ -45,36 +51,44 @@ header h1{
 .balance-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px;
+  gap:12px;
 }
 
 .balance-box{
-  padding:15px;
+  background:#f4f1ff;
   border-radius:12px;
-  background:#f6f2ff;
+  padding:15px;
   text-align:center;
 }
 
 .balance-box strong{
   display:block;
-  font-size:25px;
-  margin-top:6px;
+  font-size:24px;
+  margin-top:8px;
+}
+
+.menu{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
 }
 
 button{
   border:0;
   border-radius:10px;
-  padding:13px 16px;
+  padding:12px 16px;
   cursor:pointer;
-  background:#5b35d5;
-  color:white;
+  background:#eee;
   font-size:15px;
-  width:100%;
-  margin-top:10px;
 }
 
 button:hover{
   opacity:.9;
+}
+
+.primary{
+  background:#5b35d5;
+  color:white;
 }
 
 .provider{
@@ -94,10 +108,8 @@ button:hover{
 }
 
 .status{
-  padding:10px;
-  border-radius:10px;
-  background:#eefbf1;
-  margin-top:10px;
+  font-weight:bold;
+  margin-top:12px;
 }
 
 label{
@@ -106,7 +118,8 @@ label{
   font-weight:bold;
 }
 
-input,select{
+input,
+select{
   width:100%;
   padding:13px;
   border:1px solid #ccc;
@@ -114,13 +127,38 @@ input,select{
   font-size:16px;
 }
 
-.referral-link{
-  background:#f7f7f7;
+.action{
+  width:100%;
+  margin-top:15px;
+  background:#5b35d5;
+  color:white;
+}
+
+.referral-box{
+  display:flex;
+  gap:8px;
+}
+
+.referral-box input{
+  flex:1;
+}
+
+.referral-box button{
+  background:#5b35d5;
+  color:white;
 }
 
 .history-item{
   padding:10px 0;
   border-bottom:1px solid #eee;
+}
+
+code{
+  display:block;
+  background:#f2f2f2;
+  padding:10px;
+  border-radius:8px;
+  word-break:break-all;
 }
 
 footer{
@@ -130,19 +168,18 @@ footer{
   font-size:13px;
 }
 
-.success{
-  color:green;
-  font-weight:bold;
-}
-
-.error{
-  color:red;
-  font-weight:bold;
-}
-
 @media(max-width:520px){
   .balance-grid{
     grid-template-columns:1fr;
+  }
+
+  .referral-box{
+    display:block;
+  }
+
+  .referral-box button{
+    width:100%;
+    margin-top:8px;
   }
 }
 </style>
@@ -159,6 +196,7 @@ footer{
 
 <!-- ZOSTATOK -->
 <div class="card">
+
   <h2>💰 Môj zostatok</h2>
 
   <div class="balance-grid">
@@ -178,70 +216,188 @@ footer{
   <p id="serverStatus" class="status">
     ⏳ Pripájam server…
   </p>
+
 </div>
 
 
-<!-- POSKYTOVATELIA -->
+<!-- ZARÁBAŤ -->
 <div class="card">
 
-  <h2>🎯 PTC / Offerwall</h2>
+  <h2>💰 ZARÁBAŤ KRYPTOMENU</h2>
+
+  <div class="menu">
+
+    <button onclick="show('providers')">
+      🎯 PTC
+    </button>
+
+    <button onclick="show('providers')">
+      🎁 Offerwall
+    </button>
+
+    <button onclick="show('miningSection')">
+      ⛏️ Mining
+    </button>
+
+    <button onclick="show('withdrawSection')">
+      💳 Výber
+    </button>
+
+  </div>
+
+  <p class="mini">
+    Odmeny sa pripisujú do Banku cez serverové spracovanie.
+  </p>
+
+</div>
+
+
+<!-- PROVIDERI -->
+<div class="card" id="providers">
+
+  <h2>🎯 Služby a reklamy</h2>
+
+
+  <!-- OCTOCLIX -->
+  <div class="provider">
+
+    <h3>🟠 OctoClix</h3>
+
+    <p>
+      PTC reklamy a shortlinky.
+      Webová stránka Lili Faucet je v OctoClix manuálne schválená.
+    </p>
+
+    <button
+      class="primary"
+      onclick="window.open('https://octoclick.com','_blank')">
+
+      🟠 Otvoriť OctoClix
+
+    </button>
+
+    <p class="mini">
+      Postback bude zapojený po doručení presných technických údajov
+      od manažéra OctoClix.
+    </p>
+
+  </div>
+
 
   <!-- ADPARAGON -->
   <div class="provider">
-    <h3>🟠 AdParagon</h3>
+
+    <h3>🟣 AdParagon</h3>
 
     <p>
       PTC · Offerwall · Surveys · Playtime
     </p>
 
-    <button onclick="window.open('https://offerwall.adparagon.io/','_blank')">
-      Otvoriť AdParagon
+    <button
+      class="primary"
+      onclick="showProviderMessage('AdParagon')">
+
+      🟣 Otvoriť AdParagon
+
     </button>
+
+<p class="mini">
+      Použi svoju osobnú URL aplikácie AdParagon.
+    </p>
+
   </div>
 
 
   <!-- COINLYADS -->
   <div class="provider">
-    <h3>🟢 CoinlyAds</h3>
+
+    <h3>🟡 CoinlyAds</h3>
 
     <p>
       PTC · Surf · Offerwall
     </p>
 
-    <button onclick="window.open('https://www.coinlyads.com/','_blank')">
-      Otvoriť CoinlyAds
+    <button
+      class="primary"
+      onclick="showProviderMessage('CoinlyAds')">
+
+      🟡 Otvoriť CoinlyAds
+
     </button>
+
+    <p class="mini">
+      Použi svoju osobnú URL aplikácie CoinlyAds.
+    </p>
+
   </div>
 
 
   <!-- SPLITGRID -->
   <div class="provider">
+
     <h3>🔵 SplitGrid</h3>
 
     <p>
       PTC · Offerwall · Surveys · Games
     </p>
 
-    <button onclick="window.open('https://www.splitgrid.net/','_blank')">
-      Otvoriť SplitGrid
+    <button
+      class="primary"
+      onclick="showProviderMessage('SplitGrid')">
+
+      🔵 Otvoriť SplitGrid
+
     </button>
+
+    <p class="mini">
+      Odmena sa má pripísať cez potvrdený provider postback.
+    </p>
+
   </div>
 
 
   <!-- AOYCO -->
   <div class="provider">
 
-    <h3>🟣 AoyCo</h3>
+    <h3>🟢 AoyCo</h3>
 
     <p>
-      PTC
+      Offerwall
     </p>
 
-    <button onclick="openAoyCo()">
-      Otvoriť AoyCo PTC
+    <button
+      class="primary"
+      onclick="window.open(
+      'https://aoyco.in/offerwall/qWUls6MqCgbYt3jj34cFL33rWzjC4POJ/1',
+      '_blank'
+      )">
+
+      🟢 Otvoriť AoyCo
+
     </button>
 
+    <p class="mini">
+      AoyCo aplikácia: Lili Faucet
+    </p>
+
   </div>
+
+</div>
+
+
+<!-- PTC -->
+<div class="card">
+
+  <h2>🎯 PTC reklamy</h2>
+
+  <p>
+    Odmena sa nemá vytvárať iba kliknutím na tlačidlo.
+    Musí prísť potvrdenie od reklamného providera.
+  </p>
+
+  <p class="mini">
+    Takto chránime Bank pred falošnými odmenami.
+  </p>
 
 </div>
 
@@ -249,25 +405,29 @@ footer{
 <!-- BANK -->
 <div class="card">
 
-  <h2>🏦 Bank → ⛏️ Mining</h2>
+  <h2>🏦 Bank</h2>
 
   <p>
-    Presuň sumu zo svojho Bank zostatku do Mining.
+    Peniaze z potvrdených odmien sa zapisujú do Banku.
   </p>
 
   <label for="bankAmount">
-    Suma v sats
+    💰 Suma do Mining
   </label>
 
   <input
     id="bankAmount"
     type="number"
     min="1"
-    placeholder="Suma v sats"
+    placeholder="Zadaj počet sats"
   >
 
-  <button onclick="bankToMining()">
-    🏦 → ⛏️ Presunúť do Mining
+  <button
+    class="action"
+    onclick="bankToMining()">
+
+    ⛏️ Presunúť Bank → Mining
+
   </button>
 
   <p id="bankMessage"></p>
@@ -276,31 +436,53 @@ footer{
 
 
 <!-- MINING -->
-<div class="card">
+<div class="card" id="miningSection">
 
   <h2>⛏️ Mining</h2>
 
   <p>
-    Vyber dĺžku mining cyklu.
+    Mining používa prostriedky, ktoré už sú v Banku/Mining účte.
   </p>
 
   <label for="days">
     Dĺžka cyklu
   </label>
 
-<select id="days">
-    <option value="1">1 deň — 0,67 %</option>
-    <option value="5">5 dní — 3,33 %</option>
-    <option value="10">10 dní — 8 %</option>
-    <option value="20">20 dní — 16,67 %</option>
-    <option value="30">30 dní — 26,67 %</option>
+  <select id="days">
+
+    <option value="1">
+      1 deň — 0,67 %
+    </option>
+
+    <option value="5">
+      5 dní — 3,33 %
+    </option>
+
+    <option value="10">
+      10 dní — 8 %
+    </option>
+
+    <option value="20">
+      20 dní — 16,67 %
+    </option>
+
+    <option value="30">
+      30 dní — 26,67 %
+    </option>
+
   </select>
 
-  <button onclick="startMining()">
+  <button
+    class="action"
+    onclick="startMining()">
+
     ⛏️ Spustiť mining
+
   </button>
 
   <p id="miningMessage"></p>
+
+  <h3>📊 Moje mining cykly</h3>
 
   <div id="cycles">
     Načítavam mining cykly…
@@ -309,7 +491,7 @@ footer{
 </div>
 
 
-<!-- POZVANIE -->
+<!-- REFERRAL -->
 <div class="card">
 
   <h2>👥 Pozvanie</h2>
@@ -318,33 +500,37 @@ footer{
     Tvoj referral odkaz:
   </p>
 
-  <input
-    id="referralLink"
-    class="referral-link"
-    type="text"
-    readonly
-  >
+  <div class="referral-box">
 
-  <button onclick="copyReferral()">
-    📋 Kopírovať odkaz
-  </button>
+    <input
+      id="referralLink"
+      type="text"
+      readonly
+      value="https://tomsazuff.github.io/Lili-Faucet/?ref=lili"
+    >
+
+    <button onclick="copyReferral()">
+      📋 Kopírovať
+    </button>
+
+  </div>
 
   <p id="referralMessage"></p>
 
   <p class="mini">
-    Tvoj referral odkaz je vytvorený podľa tvojho ID účtu.
+    ID účtu: <strong>lili</strong>
   </p>
 
 </div>
 
 
 <!-- VÝBER -->
-<div class="card">
+<div class="card" id="withdrawSection">
 
-  <h2>💳 Výber</h2>
+  <h2>💳 Výber cez FaucetPay</h2>
 
   <p>
-    Minimálny výber: <strong>100 sats</strong>
+    Minimálny výber je 100 sats.
   </p>
 
   <label for="currency">
@@ -352,15 +538,32 @@ footer{
   </label>
 
   <select id="currency">
-    <option value="BTC">BTC</option>
-    <option value="USDC">USDC</option>
-    <option value="LTC">LTC</option>
-    <option value="DOGE">DOGE</option>
-    <option value="USDT">USDT</option>
+
+    <option value="BTC">
+      BTC
+    </option>
+
+    <option value="USDC">
+      USDC
+    </option>
+
+    <option value="LTC">
+      LTC
+    </option>
+
+    <option value="DOGE">
+      DOGE
+    </option>
+
+    <option value="USDT">
+      USDT
+    </option>
+
   </select>
 
+
   <label for="amount">
-    💰 Suma v sats
+    💰 Suma
   </label>
 
   <input
@@ -370,18 +573,24 @@ footer{
     placeholder="Min. 100 sats"
   >
 
+
   <label for="wallet">
-    👛 FaucetPay adresa / username
+    👛 FaucetPay e-mail / username / adresa
   </label>
 
   <input
     id="wallet"
     type="text"
-    placeholder="Zadaj cieľ výplaty"
+    placeholder="Cieľ výplaty"
   >
 
-  <button onclick="requestWithdraw()">
+
+  <button
+    class="action"
+    onclick="requestWithdraw()">
+
     📤 Požiadať o výber
+
   </button>
 
   <p id="withdrawMessage"></p>
@@ -394,7 +603,7 @@ footer{
 
   <h2>📜 História</h2>
 
-  <div id="history">
+<div id="history">
     Načítavam…
   </div>
 
@@ -404,95 +613,62 @@ footer{
 
 
 <footer>
-  Lili Faucet © 2026
+
+  Lili Faucet © 2026<br>
+  PTC • OctoClix • AdParagon • CoinlyAds • SplitGrid • AoyCo • Mining
+
 </footer>
 
 
 <script>
 
 const API =
-"https://ancient-mud-7b85.pazuriktomo.workers.dev";
+  "https://ancient-mud-7b85.pazuriktomo.workers.dev";
 
 const USER_ID = "lili";
 
-const AoyCoURL =
-"https://aoyco.in/offerwall/qWUls6MqCgbYt3jj34cFL33rWzjC4POJ/1";
 
+/* -------------------------
+   POMOCNÉ FUNKCIE
+------------------------- */
 
-/* =========================
-   AOYCO
-========================= */
+function show(id){
 
-function openAoyCo(){
+  const el = document.getElementById(id);
 
-  window.open(
-    AoyCoURL,
-    "_blank"
-  );
+  if(el){
 
-}
-
-
-/* =========================
-   REFERRAL
-========================= */
-
-function updateReferral(){
-
-  const link =
-    window.location.origin +
-    window.location.pathname +
-    "?ref=" +
-    encodeURIComponent(USER_ID);
-
-  document.getElementById(
-    "referralLink"
-  ).value = link;
-
-}
-
-
-/* =========================
-   COPY REFERRAL
-========================= */
-
-async function copyReferral(){
-
-  const input =
-    document.getElementById(
-      "referralLink"
-    );
-
-  try{
-
-    await navigator.clipboard.writeText(
-      input.value
-    );
-
-    document.getElementById(
-      "referralMessage"
-    ).textContent =
-      "✅ Referral odkaz skopírovaný.";
-
-  }catch(e){
-
-    input.select();
-
-    document.execCommand("copy");
-
-    document.getElementById(
-      "referralMessage"
-    ).textContent =
-      "✅ Referral odkaz skopírovaný.";
+    el.scrollIntoView({
+      behavior:"smooth"
+    });
 
   }
 
 }
 
 
-/* =========================
-   LOAD STATE
-========================= */
+function esc(value){
+
+  return String(value ?? "")
+    .replace(/[&<>"']/g,function(c){
+
+      return {
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+
+      }[c];
+
+    });
+
+}
+
+
+/* -------------------------
+   SERVER
+------------------------- */
 
 async function loadState(){
 
@@ -502,7 +678,12 @@ async function loadState(){
       await fetch(
         API +
         "/api/state?user_id=" +
-        encodeURIComponent(USER_ID)
+        encodeURIComponent(USER_ID) +
+        "&t=" +
+        Date.now(),
+        {
+          cache:"no-store"
+        }
       );
 
     const data =
@@ -511,46 +692,42 @@ async function loadState(){
     if(!data.ok){
 
       throw new Error(
-        data.error ||
-        "Server vrátil chybu."
+        data.error || "Server chyba."
       );
 
     }
 
-    document.getElementById(
-      "bank"
-    ).textContent =
-      Number(
-        data.bank_sats || 0
-      ).toLocaleString("sk-SK") +
+
+    document.getElementById("bank")
+      .textContent =
+      Number(data.bank_sats || 0)
+      .toLocaleString("sk-SK") +
       " sats";
 
 
-    document.getElementById(
-      "mining"
-    ).textContent =
-      Number(
-        data.mining_sats || 0
-      ).toLocaleString("sk-SK") +
+    document.getElementById("mining")
+      .textContent =
+      Number(data.mining_sats || 0)
+      .toLocaleString("sk-SK") +
       " sats";
 
 
-    document.getElementById(
-      "serverStatus"
-    ).textContent =
-      "🟢 Lili Faucet server online";
+    document.getElementById("serverStatus")
+      .textContent =
+      "🟢 Lili-Faucet server online";
 
 
     renderCycles(
       data.cycles || []
     );
 
-  }catch(error){
+  }
 
-    document.getElementById(
-      "serverStatus"
-    ).textContent =
-      "🔴 " +
+  catch(error){
+
+    document.getElementById("serverStatus")
+      .textContent =
+      "🔴 Server: " +
       error.message;
 
   }
@@ -558,16 +735,15 @@ async function loadState(){
 }
 
 
-/* =========================
-   MINING CYCLES
-========================= */
+/* -------------------------
+   MINING CYKLY
+------------------------- */
 
 function renderCycles(cycles){
 
   const box =
-    document.getElementById(
-      "cycles"
-    );
+    document.getElementById("cycles");
+
 
   if(!cycles.length){
 
@@ -580,87 +756,92 @@ function renderCycles(cycles){
 
 
   box.innerHTML =
-    cycles.map(
-      cycle => {
+    cycles.map(function(cycle){
 
-        const amount =
-          Number(
-            cycle.principal_sats || 0
+      const amount =
+        Number(cycle.principal_sats || 0)
+        .toLocaleString("sk-SK");
+
+
+      let endDate = "";
+
+      try{
+
+        endDate =
+          new Date(
+            cycle.ends_at
           ).toLocaleString("sk-SK");
 
+      }
+      catch(e){
 
-        const end =
-          cycle.ends_at
-          ? new Date(
-              cycle.ends_at
-            ).toLocaleString("sk-SK")
-          : "-";
+        endDate =
+          cycle.ends_at || "";
+
+      }
 
 
-        if(
-          cycle.status === "active"
-        ){
-
-          return 
-            <div class="provider">
-
-              <b>
-                ⛏️ Mining cyklus #${cycle.id}
-              </b>
-
-              <br>
-
-              Suma:
-              ${amount} sats
-
-              <br>
-
-              Koniec:
-              ${end}
-
-              <br>
-
-              ⏳ Aktívny
-
-              <button
-                onclick="releaseMining(${Number(cycle.id)})"
-              >
-                🏦 Presunúť do Banku
-              </button>
-
-            </div>
-          ;
-
-        }
-
+      if(cycle.status === "active"){
 
         return 
           <div class="provider">
 
             <b>
-              ⛏️ Mining cyklus #${cycle.id}
+              ⛏️ Mining cyklus #${esc(cycle.id)}
             </b>
 
             <br>
 
+            💰 Vklad:
             ${amount} sats
 
             <br>
 
-            ✅ Uvoľnený
+            📅 Koniec:
+            ${esc(endDate)}
+
+            <br><br>
+
+            <button
+              onclick="releaseMining(${Number(cycle.id)})">
+
+              🏦 Presunúť do Banku
+
+            </button>
 
           </div>
         ;
 
       }
-    ).join("");
+
+
+      return 
+        <div class="provider">
+
+          <b>
+            ⛏️ Mining cyklus #${esc(cycle.id)}
+          </b>
+
+          <br>
+
+          💰
+          ${amount} sats
+
+          <br>
+
+          ✅ Cyklus uvoľnený
+
+        </div>
+      ;
+
+    }).join("");
 
 }
 
 
-/* =========================
+/* -------------------------
    BANK → MINING
-========================= */
+------------------------- */
 
 async function bankToMining(){
 
@@ -677,10 +858,7 @@ async function bankToMining(){
     );
 
 
-  if(
-    !Number.isInteger(amount) ||
-    amount <= 0
-  ){
+  if(!Number.isFinite(amount) || amount <= 0){
 
     message.textContent =
       "⚠️ Zadaj platnú sumu.";
@@ -698,23 +876,21 @@ async function bankToMining(){
 
     const response =
       await fetch(
-        API +
-        "/api/bank/to-mining",
+        API + "/api/bank/to-mining",
         {
           method:"POST",
 
           headers:{
-            "content-type":
+            "Content-Type":
               "application/json"
           },
 
           body:JSON.stringify({
 
-            user_id:
-              USER_ID,
+            user_id:USER_ID,
 
             amount_sats:
-              amount
+              Math.floor(amount)
 
           })
 
@@ -725,8 +901,7 @@ async function bankToMining(){
     const data =
       await response.json();
 
-
-    if(!data.ok){
+if(!data.ok){
 
       throw new Error(
         data.error ||
@@ -737,15 +912,19 @@ async function bankToMining(){
 
 
     message.textContent =
-      "✅ Suma bola presunutá do Mining.";
+      "✅ Presunuté do Mining.";
+
 
     document.getElementById(
       "bankAmount"
     ).value = "";
 
-    loadState();
 
-  }catch(error){
+    await loadState();
+
+  }
+
+  catch(error){
 
     message.textContent =
       "⚠️ " +
@@ -756,9 +935,9 @@ async function bankToMining(){
 }
 
 
-/* =========================
-   START MINING
-========================= */
+/* -------------------------
+   SPUSTIŤ MINING
+------------------------- */
 
 async function startMining(){
 
@@ -766,6 +945,7 @@ async function startMining(){
     document.getElementById(
       "miningMessage"
     );
+
 
   const days =
     Number(
@@ -783,23 +963,20 @@ async function startMining(){
 
     const response =
       await fetch(
-        API +
-        "/api/mining/start",
+        API + "/api/mining/start",
         {
           method:"POST",
 
           headers:{
-            "content-type":
+            "Content-Type":
               "application/json"
           },
 
           body:JSON.stringify({
 
-            user_id:
-              USER_ID,
+            user_id:USER_ID,
 
-            duration_days:
-              days
+            duration_days:days
 
           })
 
@@ -815,7 +992,7 @@ async function startMining(){
 
       throw new Error(
         data.error ||
-        "Mining sa nepodarilo spustiť."
+        "Mining sa nepodaril."
       );
 
     }
@@ -824,9 +1001,12 @@ async function startMining(){
     message.textContent =
       "✅ Mining cyklus spustený.";
 
-    loadState();
 
-  }catch(error){
+    await loadState();
+
+  }
+
+  catch(error){
 
     message.textContent =
       "⚠️ " +
@@ -837,35 +1017,30 @@ async function startMining(){
 }
 
 
-/* =========================
-   RELEASE MINING
-========================= */
+/* -------------------------
+   UVOLNIŤ MINING
+------------------------- */
 
-async function releaseMining(
-  cycleId
-){
+async function releaseMining(id){
 
   try{
 
     const response =
       await fetch(
-        API +
-        "/api/mining/release",
+        API + "/api/mining/release",
         {
           method:"POST",
 
           headers:{
-            "content-type":
+            "Content-Type":
               "application/json"
           },
 
           body:JSON.stringify({
 
-user_id:
-              USER_ID,
+            user_id:USER_ID,
 
-            cycle_id:
-              Number(cycleId)
+            cycle_id:Number(id)
 
           })
 
@@ -887,9 +1062,11 @@ user_id:
     }
 
 
-    loadState();
+    await loadState();
 
-  }catch(error){
+  }
+
+  catch(error){
 
     alert(
       "⚠️ " +
@@ -901,9 +1078,79 @@ user_id:
 }
 
 
-/* =========================
-   WITHDRAW
-========================= */
+/* -------------------------
+   REFERRAL
+------------------------- */
+
+function copyReferral(){
+
+  const input =
+    document.getElementById(
+      "referralLink"
+    );
+
+  const message =
+    document.getElementById(
+      "referralMessage"
+    );
+
+
+  if(
+    navigator.clipboard &&
+    navigator.clipboard.writeText
+  ){
+
+    navigator.clipboard
+      .writeText(input.value)
+      .then(function(){
+
+        message.textContent =
+          "✅ Referral odkaz skopírovaný.";
+
+      })
+      .catch(function(){
+
+        input.select();
+
+        document.execCommand("copy");
+
+        message.textContent =
+          "✅ Referral odkaz skopírovaný.";
+
+      });
+
+  }
+  else{
+
+    input.select();
+
+    document.execCommand("copy");
+
+    message.textContent =
+      "✅ Referral odkaz skopírovaný.";
+
+  }
+
+}
+
+
+/* -------------------------
+   PROVIDER INFO
+------------------------- */
+
+function showProviderMessage(name){
+
+  alert(
+    name +
+    " — sem vložíme tvoju osobnú URL aplikácie."
+  );
+
+}
+
+
+/* -------------------------
+   VÝBER
+------------------------- */
 
 async function requestWithdraw(){
 
@@ -912,12 +1159,20 @@ async function requestWithdraw(){
       "withdrawMessage"
     );
 
+
+  const currency =
+    document.getElementById(
+      "currency"
+    ).value;
+
+
   const amount =
     Number(
       document.getElementById(
         "amount"
       ).value
     );
+
 
   const wallet =
     document.getElementById(
@@ -926,7 +1181,7 @@ async function requestWithdraw(){
 
 
   if(
-    !Number.isInteger(amount) ||
+    !Number.isFinite(amount) ||
     amount < 100
   ){
 
@@ -941,7 +1196,7 @@ async function requestWithdraw(){
   if(!wallet){
 
     message.textContent =
-      "⚠️ Zadaj FaucetPay cieľ výplaty.";
+      "⚠️ Zadaj cieľ výplaty.";
 
     return;
 
@@ -949,36 +1204,32 @@ async function requestWithdraw(){
 
 
   message.textContent =
-    "⏳ Odosielam požiadavku…";
+    "⏳ Odosielam žiadosť…";
 
 
   try{
 
     const response =
       await fetch(
-        API +
-        "/api/withdraw",
+        API + "/api/withdraw",
         {
           method:"POST",
 
           headers:{
-            "content-type":
+            "Content-Type":
               "application/json"
           },
 
           body:JSON.stringify({
 
-            user_id:
-              USER_ID,
+user_id:USER_ID,
 
             amount_sats:
-              amount,
+              Math.floor(amount),
 
-            address:
-              wallet,
+            method:currency,
 
-            provider:
-              "FaucetPay"
+            address:wallet
 
           })
 
@@ -1001,21 +1252,26 @@ async function requestWithdraw(){
 
 
     message.textContent =
-      "✅ Požiadavka na výber bola prijatá.";
+      "✅ Žiadosť o výber bola vytvorená.";
+
 
     document.getElementById(
       "amount"
     ).value = "";
 
+
     document.getElementById(
       "wallet"
     ).value = "";
 
-    loadState();
 
-    loadHistory();
+    await loadState();
 
-  }catch(error){
+    await loadHistory();
+
+  }
+
+  catch(error){
 
     message.textContent =
       "⚠️ " +
@@ -1026,9 +1282,9 @@ async function requestWithdraw(){
 }
 
 
-/* =========================
-   HISTORY
-========================= */
+/* -------------------------
+   HISTÓRIA
+------------------------- */
 
 async function loadHistory(){
 
@@ -1037,13 +1293,19 @@ async function loadHistory(){
       "history"
     );
 
+
   try{
 
     const response =
       await fetch(
         API +
         "/api/transactions?user_id=" +
-        encodeURIComponent(USER_ID)
+        encodeURIComponent(USER_ID) +
+        "&t=" +
+        Date.now(),
+        {
+          cache:"no-store"
+        }
       );
 
 
@@ -1067,38 +1329,32 @@ async function loadHistory(){
 
     box.innerHTML =
       data.transactions.map(
-        transaction => {
+        function(item){
 
           const amount =
             Number(
-              transaction.amount_sats ||
-              0
-            ).toLocaleString("sk-SK");
-
-
-          const date =
-            transaction.created_at
-            ? new Date(
-                transaction.created_at
-              ).toLocaleString("sk-SK")
-            : "";
+              item.amount_sats || 0
+            )
+            .toLocaleString("sk-SK");
 
 
           return 
             <div class="history-item">
 
               <b>
-                ${transaction.type || "TRANSAKCIA"}
+                ${esc(item.type)}
               </b>
 
               <br>
 
-              ${amount} sats
+              💰
+              ${amount}
+              sats
 
               <br>
 
               <small>
-                ${date}
+                ${esc(item.created_at || "")}
               </small>
 
             </div>
@@ -1107,7 +1363,9 @@ async function loadHistory(){
         }
       ).join("");
 
-  }catch(error){
+  }
+
+  catch(error){
 
     box.innerHTML =
       "<p>Históriu sa nepodarilo načítať.</p>";
@@ -1117,23 +1375,24 @@ async function loadHistory(){
 }
 
 
-/* =========================
-   START
-========================= */
-
-updateReferral();
+/* -------------------------
+   ŠTART
+------------------------- */
 
 loadState();
 
 loadHistory();
 
-setInterval(
-  loadState,
-  30000
-);
+
+/* Obnovenie každých 30 sekúnd */
 
 setInterval(
-  loadHistory,
+  function(){
+
+    loadState();
+    loadHistory();
+
+  },
   30000
 );
 
