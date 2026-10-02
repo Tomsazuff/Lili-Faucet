@@ -1124,15 +1124,27 @@ async function loadTransactions() {
 // START
 // ------------------------------------
 
-setupReferral();
+try {
+  setupReferral();
+} catch (e) {
+  console.error("Referral chyba:", e);
 
-loadState();
+  const referral =
+    document.getElementById("referralLink");
 
-loadProviderEarnings();
+  if (referral) {
+    referral.value =
+      window.location.origin +
+      window.location.pathname +
+      "?ref=" +
+      encodeURIComponent(USER_ID);
+  }
+}
 
-loadWithdrawals();
-
-loadTransactions();
+loadState().catch(console.error);
+loadProviderEarnings().catch(console.error);
+loadWithdrawals().catch(console.error);
+loadTransactions().catch(console.error);
 
 </script>
 
