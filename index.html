@@ -1470,6 +1470,80 @@ async function startMining(){
 /* ================= CYKLY ================= */
 
 function renderCycles(){
+  const box = document.getElementById("cycles");
+  const cycles = state.cycles || [];
+
+  if(!cycles.length){
+    box.textContent = "Žiadne mining cykly.";
+    return;
+  }
+
+  let html = "";
+
+  cycles.forEach(c => {
+    const principal = sat(c.principal_sats);
+    const earned = sat(c.earned_sats);
+
+    const targetProfit = Math.floor(
+      principal * Number(c.rate)
+    );
+
+    const finalTotal = principal + targetProfit;
+
+    const status =
+      c.status === "active"
+        ? "🟢 Aktívny"
+        : "✅ Dokončený";
+
+    html += 
+      <div class="provider">
+        <strong>
+          ⛏️ ${c.duration_days} dní
+        </strong>
+
+        <p>
+          Stav:
+          ${status}
+        </p>
+
+        <p>
+          Vklad:
+          <strong>
+            ${formatSat(principal)}
+          </strong>
+        </p>
+
+        <p>
+          Aktuálny zisk:
+          <strong>
+            ${formatSat(earned)}
+          </strong>
+        </p>
+
+        <p>
+          Plánovaný zisk:
+          <strong>
+            ${formatSat(targetProfit)}
+          </strong>
+        </p>
+
+        <p>
+          Výsledná suma:
+          <strong>
+            ${formatSat(finalTotal)}
+          </strong>
+        </p>
+
+        <p class="small">
+          Koniec:
+          ${new Date(c.ends_at).toLocaleString("sk-SK")}
+        </p>
+      </div>
+    ;
+  });
+
+  box.innerHTML = html;
+  }
 
   const box =
     document.getElementById(
