@@ -5,242 +5,738 @@ Pata Hutira:
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lili Faucet</title>
+
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f4f8;color:#222}
-header{background:#5b35d5;color:white;text-align:center;padding:26px 15px}
-header h1{margin:0 0 7px}.wrap{max-width:760px;margin:18px auto;padding:0 14px}
-.card{background:white;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #0001}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.box{background:#f4f1ff;padding:14px;border-radius:12px;text-align:center}.box b{display:block;font-size:22px;margin-top:7px}
-button{border:0;border-radius:10px;padding:12px 15px;background:#5b35d5;color:white;font-size:15px;cursor:pointer}
-input,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px;font-size:16px;margin:5px 0 10px}
-label{font-weight:bold}.provider{border:1px solid #ddd;border-radius:12px;padding:14px;margin:10px 0}
-.action{width:100%;margin-top:8px}.mini{font-size:13px;color:#666}.ok{color:#16833b;font-weight:bold}.err{color:#c62828;font-weight:bold}
-.ref{display:flex;gap:7px}.ref input{flex:1}.history{border-bottom:1px solid #eee;padding:9px 0}
-@media(max-width:520px){.grid{grid-template-columns:1fr}.ref{display:block}.ref button{width:100%}}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:#f3f4f8;
+  color:#222;
+}
+
+header{
+  background:#5b35d5;
+  color:white;
+  text-align:center;
+  padding:26px 15px;
+}
+
+header h1{
+  margin:0 0 7px;
+}
+
+.wrap{
+  max-width:760px;
+  margin:18px auto;
+  padding:0 14px;
+}
+
+.card{
+  background:white;
+  border-radius:16px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 3px 12px #0001;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.box{
+  background:#f4f1ff;
+  padding:14px;
+  border-radius:12px;
+  text-align:center;
+}
+
+.box b{
+  display:block;
+  font-size:22px;
+  margin-top:7px;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:12px 15px;
+  background:#5b35d5;
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+input,
+select{
+  width:100%;
+  padding:12px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  font-size:16px;
+  margin:5px 0 10px;
+}
+
+label{
+  font-weight:bold;
+}
+
+.provider{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin:10px 0;
+}
+
+.action{
+  width:100%;
+  margin-top:8px;
+}
+
+.mini{
+  font-size:13px;
+  color:#666;
+}
+
+.ok{
+  color:#16833b;
+  font-weight:bold;
+}
+
+.err{
+  color:#c62828;
+  font-weight:bold;
+}
+
+.ref{
+  display:flex;
+  gap:7px;
+}
+
+.ref input{
+  flex:1;
+}
+
+.history{
+  border-bottom:1px solid #eee;
+  padding:9px 0;
+}
+
+.cycle{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:12px;
+  margin:8px 0;
+}
+
+.timer{
+  font-weight:bold;
+}
+
+.hidden{
+  display:none;
+}
+
+@media(max-width:520px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .ref{
+    display:block;
+  }
+
+  .ref button{
+    width:100%;
+  }
+}
 </style>
 </head>
+
 <body>
-<header><h1>💜 Lili Faucet</h1><div>PTC • Bank • Mining • Referral • Výber</div></header>
+
+<header>
+  <h1>💜 Lili Faucet</h1>
+  <div>Faucet • PTC • Bank • Mining • Referral • Výber</div>
+</header>
 
 <div class="wrap">
 
+<!-- REGISTRÁCIA -->
 <div class="card">
-<h2>👤 Registrácia / Prihlásenie</h2>
-<p class="mini">Ak niekto príde cez tvoje pozvanie, referral sa uloží automaticky pri registrácii.</p>
-<label>Užívateľské meno</label>
-<input id="regUser" placeholder="napr. peter123" autocomplete="username">
-<label>Heslo</label>
-<input id="regPass" type="password" placeholder="min. 6 znakov" autocomplete="new-password">
-<button onclick="register()">📝 Registrovať</button>
-<button onclick="login()" style="margin-left:6px">🔐 Prihlásiť</button>
-<p id="authMsg"></p>
-<p>Prihlásený účet: <b id="currentUser">lili</b></p>
+  <h2>👤 Registrácia / Prihlásenie</h2>
+
+  <p class="mini">
+    Ak niekto príde cez tvoje pozvanie,
+    referral sa priradí automaticky pri registrácii.
+  </p>
+
+  <label>Užívateľské meno</label>
+  <input
+    id="regUser"
+    placeholder="napr. peter123"
+    autocomplete="username"
+  >
+
+  <label>Heslo</label>
+  <input
+    id="regPass"
+    type="password"
+    placeholder="min. 6 znakov"
+    autocomplete="current-password"
+  >
+
+  <button onclick="register()">📝 Registrovať</button>
+  <button onclick="login()" style="margin-left:6px">
+    🔐 Prihlásiť
+  </button>
+
+  <p id="authMsg"></p>
+
+  <p>
+    Prihlásený účet:
+    <b id="currentUser">lili</b>
+  </p>
 </div>
 
+
+<!-- STAV -->
 <div class="card">
-<h2>💰 Zostatok</h2>
-<div class="grid">
-<div class="box">🏦 Bank<b id="bank">0 sats</b></div>
-<div class="box">⛏️ Mining<b id="mining">0 sats</b></div>
-</div>
-<p id="serverStatus" class="mini">⏳ Pripájam server…</p>
+
+  <h2>💰 Zostatok</h2>
+
+  <div class="grid">
+
+    <div class="box">
+      🏦 Bank
+      <b id="bank">0 sats</b>
+    </div>
+
+    <div class="box">
+      ⛏️ Mining
+      <b id="mining">0 sats</b>
+    </div>
+
+  </div>
+
+  <p id="serverStatus" class="mini">
+    ⏳ Pripájam server…
+  </p>
+
 </div>
 
+
+<!-- FAUCET -->
 <div class="card">
-<h2>🎯 Poskytovatelia</h2>
 
-<div class="provider">
-<h3>🟠 OctoClick</h3>
-<p>PTC / reklamná sieť.</p>
-<button onclick="window.open('https://octoclick.com','_blank')">Otvoriť OctoClick</button>
-<p class="mini">Postback sa nenastavuje naslepo; treba presné parametre od manažéra.</p>
+  <h2>🚰 Faucet</h2>
+
+  <p>
+    Claim každých <b>5 minút</b>.
+  </p>
+
+  <p class="mini">
+    Odmena: <b>10 sats</b>
+  </p>
+
+  <button
+    id="claimBtn"
+    class="action"
+    onclick="claimFaucet()"
+  >
+    🚰 Claim 10 sats
+  </button>
+
+  <p id="faucetTimer" class="timer"></p>
+  <p id="faucetMsg"></p>
+
 </div>
 
-<div class="provider">
-<h3>🟣 AdParagon</h3>
-<p>PTC · Offerwall · Surveys · Playtime</p>
-<button onclick="alert('Sem vložíme tvoju osobnú AdParagon URL, keď ju budeš mať.')">Otvoriť</button>
-</div>
 
-<div class="provider">
-<h3>🟡 CoinlyAds</h3>
-<p>PTC · Surf · Offerwall</p>
-<button onclick="alert('Sem vložíme tvoju osobnú CoinlyAds URL, keď ju budeš mať.')">Otvoriť</button>
-</div>
-
-<div class="provider">
-<h3>🔵 SplitGrid</h3>
-<p>PTC · Offerwall · Surveys · Games</p>
-<button onclick="alert('Sem vložíme tvoju osobnú SplitGrid URL, keď ju budeš mať.')">Otvoriť</button>
-</div>
-
-<div class="provider">
-<h3>🟢 AoyCo</h3>
-<button onclick="window.open('https://aoyco.in/offerwall/qWUls6MqCgbYt3jj34cFL33rWzjC4POJ/1','_blank')">Otvoriť AoyCo</button>
-</div>
-</div>
-
+<!-- PTC -->
 <div class="card">
-<h2>🏦 Bank → Mining</h2>
-<input id="bankAmount" type="number" min="1" placeholder="sats">
-<button class="action" onclick="bankToMining()">⛏️ Presunúť do Mining</button>
-<p id="bankMsg"></p>
+
+  <h2>🎯 PTC</h2>
+
+  <p>
+    PTC odmeny sa pripíšu po potvrdení
+    skutočného provider postbacku.
+  </p>
+
+  <p class="mini">
+    Rozdelenie PTC:
+    <b>50 % Bank / 50 % Mining</b>
+  </p>
+
+  <div class="provider">
+
+    <h3>🟠 OctoClick</h3>
+
+    <p>
+      PTC / reklamná sieť.
+    </p>
+
+    <button
+      onclick="window.open('https://octoclick.com','_blank')"
+    >
+      Otvoriť OctoClick
+    </button>
+
+  </div>
+
 </div>
 
+
+<!-- PROVIDERI -->
 <div class="card">
-<h2>⛏️ Mining</h2>
-<p>Po skončení cyklu sa vklad + výnos automaticky presunie do Banku. Funguje aj bez otvorenej stránky, ak je v Cloudflare nastavený Cron Trigger.</p>
 
-<select id="days">
-<option value="1">1 deň — 0,67 %</option>
-<option value="5">5 dní — 3,33 %</option>
-<option value="10">10 dní — 8 %</option>
-<option value="20">20 dní — 16,67 %</option>
-<option value="30">30 dní — 26,67 %</option>
-</select>
+  <h2>🎯 Poskytovatelia</h2>
 
-<button class="action" onclick="startMining()">⛏️ Spustiť mining</button>
-<p id="miningMsg"></p>
-<div id="cycles"></div>
+  <div class="provider">
+
+    <h3>🟣 AdParagon</h3>
+
+    <p>
+      PTC • Offerwall • Surveys • Playtime
+    </p>
+
+<button
+      onclick="alert('Sem vložíme tvoju osobnú AdParagon URL, keď ju budeš mať.')"
+    >
+      Otvoriť AdParagon
+    </button>
+
+  </div>
+
+
+  <div class="provider">
+
+    <h3>🟡 CoinlyAds</h3>
+
+    <p>
+      PTC • Surf • Offerwall
+    </p>
+
+    <button
+      onclick="alert('Sem vložíme tvoju osobnú CoinlyAds URL, keď ju budeš mať.')"
+    >
+      Otvoriť CoinlyAds
+    </button>
+
+  </div>
+
+
+  <div class="provider">
+
+    <h3>🔵 SplitGrid</h3>
+
+    <p>
+      PTC • Offerwall • Surveys • Games
+    </p>
+
+    <button
+      onclick="alert('Sem vložíme tvoju osobnú SplitGrid URL, keď ju budeš mať.')"
+    >
+      Otvoriť SplitGrid
+    </button>
+
+  </div>
+
+
+  <div class="provider">
+
+    <h3>🟢 AoyCo</h3>
+
+    <button
+      onclick="window.open('https://aoyco.in','_blank')"
+    >
+      Otvoriť AoyCo
+    </button>
+
+  </div>
+
 </div>
 
+
+<!-- BANK -->
 <div class="card">
-<h2>👥 Moje pozvanie</h2>
-<div class="ref">
-<input id="refLink" readonly>
-<button onclick="copyRef()">📋 Kopírovať</button>
-</div>
-<p id="refMsg"></p>
-<p class="mini">Pozvaný používateľ dostane pri registrácii vlastný účet. Referral sa priradí iba raz.</p>
+
+  <h2>🏦 Bank → Mining</h2>
+
+  <input
+    id="bankAmount"
+    type="number"
+    min="1"
+    placeholder="sats"
+  >
+
+  <button
+    class="action"
+    onclick="bankToMining()"
+  >
+    ⛏️ Presunúť do Mining
+  </button>
+
+  <p id="bankMsg"></p>
+
 </div>
 
+
+<!-- MINING -->
 <div class="card">
-<h2>💳 Výber</h2>
-<p>Minimum: 100 sats. Žiadosť sa zatiaľ uloží ako <b>pending</b>; automatické odoslanie cez FaucetPay ešte nie je napojené.</p>
 
-<select id="currency">
-<option>BTC</option>
-<option>USDC</option>
-</select>
+  <h2>⛏️ Mining</h2>
 
-<input id="amount" type="number" min="100" placeholder="sats">
-<input id="wallet" placeholder="FaucetPay / cieľ výplaty">
+  <p>
+    Po skončení cyklu sa vklad + výnos
+    automaticky presunie do Banku.
+  </p>
 
-<button class="action" onclick="withdraw()">📤 Požiadať o výber</button>
-<p id="withdrawMsg"></p>
+  <p class="mini">
+    Funguje aj bez otvorenej stránky,
+    ak je v Cloudflare nastavený Cron Trigger.
+  </p>
+
+  <select id="days">
+
+    <option value="1">
+      1 deň — 0,67 %
+    </option>
+
+    <option value="5">
+      5 dní — 3,33 %
+    </option>
+
+    <option value="10">
+      10 dní — 8 %
+    </option>
+
+    <option value="20">
+      20 dní — 16,67 %
+    </option>
+
+    <option value="30">
+      30 dní — 26,67 %
+    </option>
+
+  </select>
+
+  <button
+    class="action"
+    onclick="startMining()"
+  >
+    ⛏️ Spustiť mining
+  </button>
+
+  <p id="miningMsg"></p>
+
+  <div id="cycles"></div>
+
 </div>
 
+
+<!-- REFERRAL -->
 <div class="card">
-<h2>📜 História</h2>
-<div id="history">Načítavam…</div>
+
+  <h2>👥 Moje pozvanie</h2>
+
+  <div class="ref">
+
+    <input
+      id="refLink"
+      readonly
+    >
+
+    <button onclick="copyRef()">
+      📋 Kopírovať
+    </button>
+
+  </div>
+
+  <p id="refMsg"></p>
+
+  <p class="mini">
+    Pozvaný používateľ dostane vlastný účet.
+    Referral sa priradí iba raz.
+  </p>
+
+</div>
+
+
+<!-- VÝBER -->
+<div class="card">
+
+  <h2>💳 Výber</h2>
+
+  <p>
+    Minimum: <b>100 sats</b>.
+  </p>
+
+  <p class="mini">
+    Žiadosť sa uloží ako
+    <b>pending</b>.
+    Automatické odoslanie cez FaucetPay
+    zatiaľ nie je pripojené.
+  </p>
+
+  <select id="currency">
+
+    <option value="BTC">
+      BTC
+    </option>
+
+    <option value="USDC">
+      USDC
+    </option>
+
+  </select>
+
+  <input
+    id="amount"
+    type="number"
+    min="100"
+    placeholder="sats"
+  >
+
+  <input
+    id="wallet"
+    placeholder="FaucetPay / cieľ výplaty"
+  >
+
+  <button
+    class="action"
+    onclick="withdraw()"
+  >
+    📤 Požiadať o výber
+  </button>
+
+  <p id="withdrawMsg"></p>
+
+</div>
+
+
+<!-- HISTÓRIA -->
+<div class="card">
+
+  <h2>📜 História</h2>
+
+  <div id="history">
+    Načítavam…
+  </div>
+
 </div>
 
 </div>
+
 
 <script>
-const API="https://ancient-mud-7b85.pazuriktomo.workers.dev";
 
-let userId=localStorage.getItem("lili_user")||"lili";
+const API =
+  "https://ancient-mud-7b85.pazuriktomo.workers.dev";
 
-const params=new URLSearchParams(location.search);
-const incomingRef=params.get("ref");
+let userId =
+  localStorage.getItem("lili_user") || "lili";
 
-if(incomingRef && incomingRef!==userId)
-  localStorage.setItem("lili_ref",incomingRef);
+let token =
+  localStorage.getItem("lili_token") || "";
 
-function msg(id,text,good=false){
-  const e=document.getElementById(id);
-  e.textContent=text;
-  e.className=good?"ok":"err";
+const params =
+  new URLSearchParams(location.search);
+
+const incomingRef =
+  params.get("ref");
+
+if (
+  incomingRef &&
+  incomingRef !== userId
+) {
+  localStorage.setItem(
+    "lili_ref",
+    incomingRef
+  );
 }
 
-function setUser(u){
-  userId=u;
-  localStorage.setItem("lili_user",u);
 
-  document.getElementById("currentUser").textContent=u;
+function msg(id,text,good=false){
 
-  document.getElementById("refLink").value=
-    location.origin+
-    location.pathname+
-    "?ref="+
+  const e =
+    document.getElementById(id);
+
+  e.textContent = text;
+
+  e.className =
+    good ? "ok" : "err";
+}
+
+
+function setUser(u,newToken=""){
+
+  userId = u;
+
+  localStorage.setItem(
+    "lili_user",
+    u
+  );
+
+  if(newToken){
+
+    token = newToken;
+
+    localStorage.setItem(
+      "lili_token",
+      newToken
+    );
+
+  }
+
+  document.getElementById(
+    "currentUser"
+  ).textContent = u;
+
+  document.getElementById(
+    "refLink"
+  ).value =
+    location.origin +
+    location.pathname +
+    "?ref=" +
     encodeURIComponent(u);
 }
 
-async function api(path,opts={},timeout=10000){
 
-  const c=new AbortController();
-  const t=setTimeout(
-    ()=>c.abort(),
-    timeout
-  );
+async function api(
+  path,
+  opts={},
+  timeout=10000
+){
+
+const controller =
+    new AbortController();
+
+  const timer =
+    setTimeout(
+      () => controller.abort(),
+      timeout
+    );
 
   try{
 
-    const r=await fetch(
-      API+path,
-      {
-        ...opts,
-        signal:c.signal,
-        cache:"no-store"
-      }
-    );
+    const headers = {
+      ...(opts.headers || {})
+    };
 
-    const d=await r.json();
+    if(token){
+      headers.Authorization =
+        "Bearer " + token;
+    }
 
-    if(!r.ok || d.ok===false)
-      throw Error(
-        d.error||("HTTP "+r.status)
+    const r =
+      await fetch(
+        API + path,
+        {
+          ...opts,
+          headers,
+          signal:
+            controller.signal,
+          cache:"no-store"
+        }
       );
+
+    let d;
+
+    try{
+      d = await r.json();
+    }catch(_){
+      throw Error(
+        "Server vrátil neplatnú odpoveď."
+      );
+    }
+
+    if(
+      !r.ok ||
+      d.ok === false
+    ){
+
+      if(r.status === 401){
+        localStorage.removeItem(
+          "lili_token"
+        );
+        token = "";
+      }
+
+      throw Error(
+        d.error ||
+        ("HTTP " + r.status)
+      );
+    }
 
     return d;
 
   }catch(e){
 
     throw Error(
-      e.name==="AbortError"
-      ?"Server neodpovedal do 10 sekúnd."
-      :e.message
+      e.name === "AbortError"
+      ? "Server neodpovedal do 10 sekúnd."
+      : e.message
     );
 
   }finally{
 
-    clearTimeout(t);
+    clearTimeout(timer);
 
   }
 }
 
+
 async function register(){
 
-  const u=
-    document.getElementById("regUser")
-    .value.trim()
-    .toLowerCase();
+  const u =
+    document
+      .getElementById("regUser")
+      .value
+      .trim()
+      .toLowerCase();
 
-  const p=
-    document.getElementById("regPass")
-    .value;
+  const p =
+    document
+      .getElementById("regPass")
+      .value;
 
-  if(!/^[a-z0-9_]{3,24}$/.test(u))
+  if(
+    !/^[a-z0-9_-]{3,32}$/.test(u)
+  ){
+
     return msg(
       "authMsg",
-      "Použi 3–24 znakov: a-z, 0-9 alebo _."
+      "Použi 3–32 znakov: a-z, 0-9, _ alebo -."
     );
 
-  if(p.length<6)
+  }
+
+  if(p.length < 6){
+
     return msg(
       "authMsg",
       "Heslo musí mať aspoň 6 znakov."
     );
 
+  }
+
   try{
 
-    const ref=
-      localStorage.getItem("lili_ref")||
-      incomingRef||
+    const ref =
+      localStorage.getItem("lili_ref") ||
+      incomingRef ||
       "";
 
-    const d=
+    const d =
       await api(
         "/api/register",
         {
@@ -257,12 +753,19 @@ async function register(){
         }
       );
 
-    setUser(d.user_id);
+    setUser(
+      d.user_id,
+      d.token
+    );
 
     msg(
       "authMsg",
       "✅ Registrácia úspešná.",
       true
+    );
+
+    localStorage.removeItem(
+      "lili_ref"
     );
 
     load();
@@ -271,26 +774,30 @@ async function register(){
 
     msg(
       "authMsg",
-      "⚠️ "+e.message
+      "⚠️ " + e.message
     );
 
   }
 }
 
+
 async function login(){
 
-  const u=
-    document.getElementById("regUser")
-    .value.trim()
-    .toLowerCase();
+  const u =
+    document
+      .getElementById("regUser")
+      .value
+      .trim()
+      .toLowerCase();
 
-  const p=
-    document.getElementById("regPass")
-    .value;
+  const p =
+    document
+      .getElementById("regPass")
+      .value;
 
   try{
 
-    const d=
+    const d =
       await api(
         "/api/login",
         {
@@ -306,7 +813,10 @@ async function login(){
         }
       );
 
-    setUser(d.user_id);
+    setUser(
+      d.user_id,
+      d.token
+    );
 
     msg(
       "authMsg",
@@ -320,61 +830,78 @@ async function login(){
 
     msg(
       "authMsg",
-      "⚠️ "+e.message
+      "⚠️ " + e.message
     );
 
   }
 }
 
+
+function esc(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+
 async function load(){
 
   document.getElementById(
     "currentUser"
-  ).textContent=userId;
+  ).textContent = userId;
 
-document.getElementById(
+  document.getElementById(
     "refLink"
-  ).value=
-    location.origin+
-    location.pathname+
-    "?ref="+
+  ).value =
+    location.origin +
+    location.pathname +
+    "?ref=" +
     encodeURIComponent(userId);
 
   try{
 
-    const d=
+    const d =
       await api(
-        "/api/state?user_id="+
+        "/api/state?user_id=" +
         encodeURIComponent(userId)
       );
 
     document.getElementById(
       "bank"
-    ).textContent=
+    ).textContent =
       Number(
-        d.bank_sats||0
-      ).toLocaleString("sk-SK")+
+        d.bank_sats || 0
+      ).toLocaleString("sk-SK") +
       " sats";
 
     document.getElementById(
       "mining"
-    ).textContent=
+    ).textContent =
       Number(
-        d.mining_sats||0
-      ).toLocaleString("sk-SK")+
+        d.mining_sats || 0
+      ).toLocaleString("sk-SK") +
       " sats";
 
     document.getElementById(
       "serverStatus"
-    ).textContent=
+    ).textContent =
       "🟢 Server odpovedá";
 
     document.getElementById(
       "serverStatus"
-    ).className="mini ok";
+    ).className =
+      "mini ok";
 
     renderCycles(
-      d.cycles||[]
+      d.cycles || []
+    );
+
+updateFaucetTimer(
+      d.faucet_next_claim
     );
 
     loadHistory();
@@ -383,60 +910,225 @@ document.getElementById(
 
     document.getElementById(
       "serverStatus"
-    ).textContent=
-      "🔴 "+e.message;
+    ).textContent =
+      "🔴 " + e.message;
 
     document.getElementById(
       "serverStatus"
-    ).className=
+    ).className =
       "mini err";
+
   }
 }
 
-function renderCycles(c){
 
-  document.getElementById(
-    "cycles"
-  ).innerHTML=
+function renderCycles(cycles){
 
-  c.length
+  const el =
+    document.getElementById(
+      "cycles"
+    );
 
-  ?
+  if(!cycles.length){
 
-  c.map(x=>
-    <div class="provider">
-      <b>⛏️ Cyklus #${x.id}</b><br>
-      Vklad:
-      ${Number(x.principal_sats)
-        .toLocaleString("sk-SK")} sats<br>
-      Koniec:
-      ${x.ends_at}<br>
-      Stav:
-      ${x.status}<br>
-      Výnos:
-      ${Number(x.earned_sats||0)} sats
-    </div>
-  ).join("")
+    el.innerHTML =
+      "<p>Žiadny mining cyklus.</p>";
 
-  :
+    return;
+  }
 
-  "<p>Žiadny mining cyklus.</p>";
+  el.innerHTML =
+    cycles.map(x => {
+
+      return 
+        <div class="cycle">
+
+          <b>⛏️ Cyklus #${esc(x.id)}</b>
+          <br>
+
+          Vklad:
+          ${Number(
+            x.principal_sats || 0
+          ).toLocaleString("sk-SK")}
+          sats
+
+          <br>
+
+          Koniec:
+          ${esc(x.ends_at)}
+
+          <br>
+
+          Stav:
+          ${esc(x.status)}
+
+          <br>
+
+          Výnos:
+          ${Number(
+            x.earned_sats || 0
+          ).toLocaleString("sk-SK")}
+          sats
+
+        </div>
+      ;
+
+    }).join("");
 }
+
+
+async function claimFaucet(){
+
+  const btn =
+    document.getElementById(
+      "claimBtn"
+    );
+
+  btn.disabled = true;
+
+  try{
+
+    const d =
+      await api(
+        "/api/faucet/claim",
+        {
+          method:"POST",
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
+          body:JSON.stringify({
+            user_id:userId
+          })
+        }
+      );
+
+    msg(
+      "faucetMsg",
+      "✅ Faucet: +" +
+      d.reward_sats +
+      " sats.",
+      true
+    );
+
+    updateFaucetTimer(
+      d.next_claim
+    );
+
+    load();
+
+  }catch(e){
+
+    msg(
+      "faucetMsg",
+      "⚠️ " + e.message
+    );
+
+    btn.disabled = false;
+  }
+}
+
+
+let faucetInterval = null;
+
+
+function updateFaucetTimer(next){
+
+  const btn =
+    document.getElementById(
+      "claimBtn"
+    );
+
+  const out =
+    document.getElementById(
+      "faucetTimer"
+    );
+
+  if(faucetInterval){
+
+    clearInterval(
+      faucetInterval
+    );
+
+    faucetInterval = null;
+  }
+
+  if(!next){
+
+    btn.disabled = false;
+    out.textContent = "";
+    return;
+  }
+
+  const target =
+    new Date(next).getTime();
+
+  function tick(){
+
+    const diff =
+      Math.max(
+        0,
+        target - Date.now()
+      );
+
+    if(diff <= 0){
+
+      btn.disabled = false;
+      out.textContent =
+        "🟢 Faucet je pripravený.";
+
+      clearInterval(
+        faucetInterval
+      );
+
+      return;
+    }
+
+    btn.disabled = true;
+
+    const sec =
+      Math.ceil(diff / 1000);
+
+    const min =
+      Math.floor(sec / 60);
+
+    const s =
+      sec % 60;
+
+    out.textContent =
+      "⏳ Ďalší claim za " +
+      min +
+      ":" +
+      String(s).padStart(2,"0");
+
+  }
+
+  tick();
+
+  faucetInterval =
+    setInterval(
+      tick,
+      1000
+    );
+}
+
 
 async function bankToMining(){
 
   try{
 
-    const a=
+    const amount =
       Math.floor(
         Number(
-          document.getElementById(
-            "bankAmount"
-          ).value
+          document
+            .getElementById(
+              "bankAmount"
+            )
+            .value
         )
       );
 
-    const d=
+    const d =
       await api(
         "/api/bank/to-mining",
         {
@@ -447,22 +1139,22 @@ async function bankToMining(){
           },
           body:JSON.stringify({
             user_id:userId,
-            amount_sats:a
+            amount_sats:amount
           })
         }
       );
 
     msg(
       "bankMsg",
-      "✅ Presunuté: "+
-      d.amount_sats+
-      " sats",
+      "✅ Presunuté: " +
+      d.amount_sats +
+      " sats.",
       true
     );
 
     document.getElementById(
       "bankAmount"
-    ).value="";
+    ).value = "";
 
     load();
 
@@ -470,24 +1162,27 @@ async function bankToMining(){
 
     msg(
       "bankMsg",
-      "⚠️ "+e.message
+      "⚠️ " + e.message
     );
 
   }
 }
 
+
 async function startMining(){
 
   try{
 
-    const days=
+    const days =
       Number(
-        document.getElementById(
-          "days"
-        ).value
+        document
+          .getElementById(
+            "days"
+          )
+          .value
       );
 
-    const d=
+    const d =
       await api(
         "/api/mining/start",
         {
@@ -503,9 +1198,9 @@ async function startMining(){
         }
       );
 
-    msg(
+msg(
       "miningMsg",
-      "✅ Mining spustený. Koniec: "+
+      "✅ Mining spustený. Koniec: " +
       d.ends_at,
       true
     );
@@ -516,59 +1211,74 @@ async function startMining(){
 
     msg(
       "miningMsg",
-      "⚠️ "+e.message
+      "⚠️ " + e.message
     );
 
   }
 }
 
+
 function copyRef(){
 
   navigator.clipboard
     .writeText(
-      document.getElementById(
-        "refLink"
-      ).value
+      document
+        .getElementById(
+          "refLink"
+        )
+        .value
     )
-    .then(()=>
+    .then(() => {
+
       msg(
         "refMsg",
         "✅ Skopírované.",
         true
-      )
-    )
-    .catch(()=>
+      );
+
+    })
+    .catch(() => {
+
       msg(
         "refMsg",
         "Skopíruj odkaz ručne."
-      )
-    );
+      );
+
+    });
 }
+
 
 async function withdraw(){
 
   try{
 
-    const amount=
+    const amount =
       Math.floor(
         Number(
-          document.getElementById(
-            "amount"
-          ).value
+          document
+            .getElementById(
+              "amount"
+            )
+            .value
         )
       );
 
-    const currency=
-      document.getElementById(
-        "currency"
-      ).value;
+    const currency =
+      document
+        .getElementById(
+          "currency"
+        )
+        .value;
 
-    const address=
-      document.getElementById(
-        "wallet"
-      ).value.trim();
+    const address =
+      document
+        .getElementById(
+          "wallet"
+        )
+        .value
+        .trim();
 
-    const d=
+    const d =
       await api(
         "/api/withdraw",
         {
@@ -588,8 +1298,8 @@ async function withdraw(){
 
     msg(
       "withdrawMsg",
-      "✅ Žiadosť #"+
-      d.withdrawal_id+
+      "✅ Žiadosť #" +
+      d.withdrawal_id +
       " uložená ako pending.",
       true
     );
@@ -598,61 +1308,87 @@ async function withdraw(){
 
   }catch(e){
 
-msg(
+    msg(
       "withdrawMsg",
-      "⚠️ "+e.message
+      "⚠️ " + e.message
     );
 
   }
 }
 
+
 async function loadHistory(){
 
   try{
 
-    const d=
+    const d =
       await api(
-        "/api/transactions?user_id="+
+        "/api/transactions?user_id=" +
         encodeURIComponent(userId)
       );
 
-    document.getElementById(
-      "history"
-    ).innerHTML=
+    const el =
+      document.getElementById(
+        "history"
+      );
 
-    d.transactions?.length
+    if(
+      !d.transactions ||
+      !d.transactions.length
+    ){
 
-    ?
+      el.textContent =
+        "Zatiaľ nič.";
 
-    d.transactions.map(x=>
-      <div class="history">
-        <b>${x.type}</b>
-        —
-        ${Number(x.amount_sats)
-          .toLocaleString("sk-SK")} sats
-        <br>
-        <small>${x.created_at}</small>
-      </div>
-    ).join("")
+      return;
+    }
 
-    :
+    el.innerHTML =
+      d.transactions.map(x => {
 
-    "Zatiaľ nič.";
+        return 
+          <div class="history">
+
+            <b>
+              ${esc(x.type)}
+            </b>
+
+            —
+            ${Number(
+              x.amount_sats || 0
+            ).toLocaleString("sk-SK")}
+            sats
+
+            <br>
+
+            <small>
+              ${esc(x.created_at)}
+            </small>
+
+          </div>
+        ;
+
+      }).join("");
 
   }catch(e){
 
     document.getElementById(
       "history"
-    ).textContent=
+    ).textContent =
       "Históriu sa nepodarilo načítať.";
+
   }
 }
 
+
 load();
+
 setInterval(
   load,
   30000
 );
+
 </script>
+
 </body>
 </html>
