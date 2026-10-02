@@ -1737,6 +1737,63 @@ async function copyReferral(){
 /* ================= HISTÓRIA ================= */
 
 async function loadHistory(){
+  const box = document.getElementById("history");
+
+  if(!token) return;
+
+  const data = await api("/api/transactions");
+
+  if(!data.ok){
+    box.textContent =
+      data.error ||
+      "Históriu sa nepodarilo načítať.";
+    return;
+  }
+
+  const rows = data.transactions || [];
+
+  if(!rows.length){
+    box.textContent = "Zatiaľ žiadna história.";
+    return;
+  }
+
+  let html = 
+    <table>
+      <thead>
+        <tr>
+          <th>Dátum</th>
+          <th>Typ</th>
+          <th>Suma</th>
+        </tr>
+      </thead>
+      <tbody>
+  ;
+
+  rows.forEach(row => {
+    html += 
+      <tr>
+        <td>
+          ${new Date(row.created_at).toLocaleString("sk-SK")}
+        </td>
+
+        <td>
+          ${row.type}
+        </td>
+
+        <td>
+          ${formatSat(row.amount_sats)}
+        </td>
+      </tr>
+    ;
+  });
+
+  html += 
+      </tbody>
+    </table>
+  ;
+
+  box.innerHTML = html;
+  }
 
   const box =
     document.getElementById(
