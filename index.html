@@ -3,51 +3,36 @@
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lili Faucet</title>
 
 <style>
-*{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:Arial,sans-serif;
-  background:#f3f5f7;
-  color:#17202a;
+  background:#f3f4f6;
+  color:#111827;
 }
 
 header{
   background:#111827;
-  color:#fff;
-  padding:20px;
+  color:white;
   text-align:center;
-}
-
-header h1{
-  margin:0;
-  font-size:28px;
-}
-
-header p{
-  margin:7px 0 0;
-  opacity:.8;
+  padding:25px;
 }
 
 .container{
-  width:min(1000px,94%);
+  max-width:800px;
   margin:20px auto;
+  padding:0 15px;
 }
 
 .card{
-  background:#fff;
+  background:white;
   border-radius:14px;
   padding:20px;
   margin-bottom:18px;
-  box-shadow:0 3px 14px rgba(0,0,0,.08);
-}
-
-h2{
-  margin-top:0;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
 }
 
 input,
@@ -56,14 +41,14 @@ button{
   width:100%;
   padding:12px;
   margin-top:8px;
-  border-radius:9px;
-  border:1px solid #cbd5e1;
-  font-size:15px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
 }
 
 button{
   background:#111827;
-  color:#fff;
+  color:white;
   border:0;
   cursor:pointer;
   font-weight:bold;
@@ -73,55 +58,28 @@ button:hover{
   opacity:.9;
 }
 
-.blue{background:#2563eb}
-.green{background:#15803d}
-.red{background:#b91c1c}
-.gray{background:#475569}
-
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:14px;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
 }
 
-.stat{
-  background:#f8fafc;
-  border-radius:12px;
-  padding:16px;
+.box{
+  background:#f3f4f6;
+  padding:15px;
+  border-radius:10px;
 }
 
-.stat-title{
-  color:#64748b;
-  font-size:13px;
-}
-
-.stat-value{
-  font-size:24px;
+.big{
+  font-size:25px;
   font-weight:bold;
-  margin-top:6px;
+  margin-top:5px;
 }
 
-.nav{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:8px;
-  margin-bottom:18px;
-}
-
-.nav button{
-  margin:0;
-  font-size:13px;
-}
-
-.page.hidden,
-.hidden{
-  display:none!important;
-}
-
-.message{
-  padding:12px;
-  border-radius:9px;
+.msg{
   margin-top:12px;
+  padding:10px;
+  border-radius:8px;
 }
 
 .error{
@@ -134,69 +92,22 @@ button:hover{
   color:#166534;
 }
 
-.small{
-  font-size:13px;
-  color:#64748b;
+.hidden{
+  display:none;
 }
 
-.result{
-  background:#f1f5f9;
-  border-radius:12px;
-  padding:16px;
-  margin-top:15px;
-}
-
-.big{
-  font-size:26px;
-  font-weight:bold;
-}
-
-.provider{
-  border:1px solid #e2e8f0;
-  border-radius:12px;
-  padding:15px;
-  margin-top:12px;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-th,
-td{
-  padding:9px;
-  border-bottom:1px solid #e2e8f0;
-  text-align:left;
-  font-size:13px;
-}
-
-.badge{
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:20px;
-  background:#e2e8f0;
-  font-size:12px;
-}
-
-.progress{
-  width:100%;
-  height:10px;
-  background:#e2e8f0;
+.cycle{
+  background:#f8fafc;
+  padding:14px;
   border-radius:10px;
-  overflow:hidden;
-  margin-top:8px;
+  margin-top:10px;
 }
 
-.progress-bar{
-  height:100%;
-  background:#2563eb;
-}
-
-@media(max-width:650px){
-  .nav{
-    grid-template-columns:repeat(2,1fr);
-  }
+nav{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin-bottom:18px;
 }
 </style>
 </head>
@@ -204,1451 +115,691 @@ td{
 <body>
 
 <header>
-  <h1>💰 Lili Faucet</h1>
-  <p>Bank • Mining • Aoyco • OctoClick • Pozvania</p>
+<h1>💜 Lili Faucet</h1>
+<p>Funkčný základ</p>
 </header>
 
 <div class="container">
 
-<!-- REGISTRÁCIA / LOGIN -->
+<div id="auth">
 
-<section id="authSection">
+<div class="card">
 
-  <div class="card">
+<h2>📝 Registrácia</h2>
 
-    <h2>📝 Registrácia</h2>
+<input
+  id="regUser"
+  placeholder="Používateľské ID"
+>
 
-    <input
-      id="registerUser"
-      placeholder="Používateľské ID"
-      autocomplete="username"
-    >
+<input
+  id="regPass"
+  type="password"
+  placeholder="Heslo"
+>
 
-    <input
-      id="registerEmail"
-      type="email"
-      placeholder="E-mail"
-      autocomplete="email"
-    >
+<input
+  id="regRef"
+  placeholder="Referral ID – nepovinné"
+>
 
-    <input
-      id="registerPassword"
-      type="password"
-      placeholder="Heslo"
-      autocomplete="new-password"
-    >
-
-    <input
-      id="registerRef"
-      placeholder="Referral ID"
-    >
-
-    <p class="small">
-      Ak si prišiel cez pozývací odkaz,
-      Referral ID sa vyplní automaticky.
-    </p>
-
-    <button
-      class="blue"
-      onclick="registerUser()"
-    >
-      Registrovať
-    </button>
-
-  </div>
-
-
-  <div class="card">
-
-    <h2>🔐 Prihlásenie</h2>
-
-    <input
-      id="loginValue"
-      placeholder="E-mail alebo používateľské ID"
-      autocomplete="username"
-    >
-
-    <input
-      id="loginPassword"
-      type="password"
-      placeholder="Heslo"
-      autocomplete="current-password"
-    >
-
-    <button onclick="loginUser()">
-      Prihlásiť
-    </button>
-
-  </div>
-
-  <div id="authMessage"></div>
-
-</section>
-
-
-<!-- APLIKÁCIA -->
-
-<section id="appSection" class="hidden">
-
-  <div class="card">
-
-    <div>
-      Prihlásený:
-      <strong id="userId"></strong>
-    </div>
-
-    <button
-      class="gray"
-      onclick="logout()"
-    >
-      Odhlásiť
-    </button>
+<button onclick="register()">
+Registrovať
+</button>
 
 </div>
 
-
-  <!-- NAV -->
-
-  <div class="nav">
-
-    <button onclick="showPage('bank')">
-      🏦 Bank
-    </button>
-
-    <button onclick="showPage('mining')">
-      ⛏️ Mining
-    </button>
-
-    <button onclick="showPage('providers')">
-      🔌 Providers
-    </button>
-
-    <button onclick="showPage('referrals')">
-      🔗 Pozvania
-    </button>
-
-    <button onclick="showPage('withdraw')">
-      💳 Výber
-    </button>
-
-    <button onclick="showPage('history')">
-      📜 História
-    </button>
-
-  </div>
-
-
-  <!-- ZOSTATOK -->
-
-  <div class="card">
-
-    <h2>💰 Zostatok</h2>
-
-    <div class="grid">
-
-      <div class="stat">
-
-        <div class="stat-title">
-          Bank
-        </div>
-
-        <div
-          id="bankBalance"
-          class="stat-value"
-        >
-          0 sat
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-title">
-          Mining
-        </div>
-
-        <div
-          id="miningBalance"
-          class="stat-value"
-        >
-          0 sat
-        </div>
-
-      </div>
-
-
-      <div class="stat">
-
-        <div class="stat-title">
-          Celkom
-        </div>
-
-        <div
-          id="totalBalance"
-          class="stat-value"
-        >
-          0 sat
-        </div>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- BANK -->
-
-  <section
-    id="bankPage"
-    class="page"
-  >
-
-    <div class="card">
-
-      <h2>🏦 Bank</h2>
-
-      <div
-        id="bankLarge"
-        class="big"
-      >
-        0 sat
-      </div>
-
-      <p class="small">
-        Dostupný zostatok v Banku.
-        Z Banku môžeš presunúť ľubovoľnú dostupnú sumu
-        do Mining.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <!-- MINING -->
-
-  <section
-    id="miningPage"
-    class="page hidden"
-  >
-
-    <div class="card">
-
-      <h2>⛏️ Mining</h2>
-
-      <p class="small">
-        Najprv presuň sumu z Banku do Mining.
-        Potom vyber dĺžku cyklu a spusti mining.
-      </p>
-
-
-      <label>
-        Suma do Mining (sat)
-      </label>
-
-      <input
-        id="miningDeposit"
-        type="number"
-        min="1"
-        step="1"
-        placeholder="Napr. 1000"
-        oninput="calculateMining()"
-      >
-
-
-      <button
-        class="blue"
-        onclick="depositToMining()"
-      >
-        ⬇️ Vložiť do Mining
-      </button>
-
-
-      <h3>
-        Výpočet
-      </h3>
-
-
-      <div class="result">
-
-        <div>
-          Vklad:
-          <strong id="calcPrincipal">
-            0 sat
-          </strong>
-        </div>
-
-        <div>
-          Dĺžka:
-          <strong id="calcDays">
-            1 deň
-          </strong>
-        </div>
-
-        <div>
-          Sadzba:
-          <strong id="calcRate">
-            0,67 %
-          </strong>
-        </div>
-
-        <div>
-          Odhadovaný zisk:
-          <strong id="calcProfit">
-            0 sat
-          </strong>
-        </div>
-
-        <hr>
-
-        <div>
-          <strong>
-            Výsledná suma:
-          </strong>
-        </div>
-
-        <div
-          id="calcTotal"
-          class="big"
-        >
-          0 sat
-        </div>
-
-      </div>
-
-
-      <h3>
-        Mining cyklus
-      </h3>
-
-      <select
-        id="miningDays"
-        onchange="calculateMining()"
-      >
-
-        <option value="1">
-          1 deň — 0,67 %
-        </option>
-
-        <option value="5">
-          5 dní — 3,33 %
-        </option>
-
-        <option value="10">
-          10 dní — 8 %
-        </option>
-
-        <option value="20">
-          20 dní — 16,67 %
-        </option>
-
-        <option value="30">
-          30 dní — 26,67 %
-        </option>
-
-      </select>
-
-
-      <button
-        class="green"
-        onclick="startMining()"
-      >
-        ▶️ Spustiť mining
-      </button>
-
-      <div id="miningMessage"></div>
-
-    </div>
-
-
-    <div class="card">
-
-      <h2>
-        📊 Moje mining cykly
-      </h2>
-
-      <div id="cycles">
-        Žiadne cykly.
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <!-- PROVIDERS -->
-
-  <section
-    id="providersPage"
-    class="page hidden"
-  >
-
-    <div class="card">
-
-      <h2>🔌 Providers</h2>
-
-      <div class="provider">
-
-        <h3>Aoyco</h3>
-
-<span class="badge">
-          Aoyco
-        </span>
-
-        <p class="small">
-          Provider pre Lili Faucet.
-        </p>
-
-      </div>
-
-
-      <div class="provider">
-
-        <h3>OctoClick</h3>
-
-        <span class="badge">
-          OctoClick
-        </span>
-
-        <p class="small">
-          Provider pre Lili Faucet.
-        </p>
-
-      </div>
-
-
-      <p class="small">
-        Provider rozdelenie:
-        95 % do Banku / 5 % referral.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <!-- POZVANIA -->
-
-  <section
-    id="referralsPage"
-    class="page hidden"
-  >
-
-    <div class="card">
-
-      <h2>🔗 Moje pozvanie</h2>
-
-      <p>
-        Počet registrovaných pozvaných:
-      </p>
-
-      <div
-        id="referralCount"
-        class="big"
-      >
-        0
-      </div>
-
-
-      <p>
-        Tvoj pozývací odkaz:
-      </p>
-
-      <input
-        id="referralLink"
-        readonly
-      >
-
-      <button
-        class="blue"
-        onclick="copyReferral()"
-      >
-        📋 Kopírovať odkaz
-      </button>
-
-      <div id="referralMessage"></div>
-
-    </div>
-
-  </section>
-
-
-  <!-- VÝBER -->
-
-  <section
-    id="withdrawPage"
-    class="page hidden"
-  >
-
-    <div class="card">
-
-      <h2>💳 Výber</h2>
-
-      <p>
-        Minimum:
-        <strong>100 sat</strong>
-      </p>
-
-      <input
-        id="withdrawAmount"
-        type="number"
-        min="100"
-        step="1"
-        placeholder="Suma v sat"
-      >
-
-      <select id="withdrawMethod">
-
-        <option value="BTC">
-          BTC
-        </option>
-
-        <option value="FaucetPay">
-          FaucetPay
-        </option>
-
-      </select>
-
-      <input
-        id="withdrawAddress"
-        placeholder="BTC adresa / FaucetPay účet"
-      >
-
-      <button
-        class="green"
-        onclick="withdraw()"
-      >
-        💸 Požiadať o výber
-      </button>
-
-      <div id="withdrawMessage"></div>
-
-      <p class="small">
-        Výber sa momentálne vytvorí ako pending žiadosť.
-        Automatické odoslanie BTC/FaucetPay ešte nie je pripojené.
-      </p>
-
-    </div>
-
-  </section>
-
-
-  <!-- HISTÓRIA -->
-
-  <section
-    id="historyPage"
-    class="page hidden"
-  >
-
-    <div class="card">
-
-      <h2>📜 História</h2>
-
-      <div id="history">
-        Načítavam...
-      </div>
-
-    </div>
-
-  </section>
-
-</section>
+<div class="card">
+
+<h2>🔐 Prihlásenie</h2>
+
+<input
+  id="loginUser"
+  placeholder="Používateľské ID"
+>
+
+<input
+  id="loginPass"
+  type="password"
+  placeholder="Heslo"
+>
+
+<button onclick="login()">
+Prihlásiť
+</button>
 
 </div>
 
+<div id="authMsg"></div>
+
+</div>
+
+<div id="app" class="hidden">
+
+<div class="card">
+
+<strong>Prihlásený používateľ:</strong>
+
+<span id="currentUser"></span>
+
+<button onclick="logout()">
+Odhlásiť
+</button>
+
+</div>
+
+<nav>
+
+<button onclick="show('bankSection')">
+🏦 Bank
+</button>
+
+<button onclick="show('miningSection')">
+⛏️ Mining
+</button>
+
+<button onclick="show('withdrawSection')">
+💳 Výber
+</button>
+
+</nav>
+
+<div class="card">
+
+<h2>💰 Zostatok</h2>
+
+<div class="grid">
+
+<div class="box">
+🏦 Bank
+<div id="bank" class="big">
+0 sat
+</div>
+</div>
+
+<div class="box">
+⛏️ Mining
+<div id="mining" class="big">
+0 sat
+</div>
+</div>
+
+</div>
+
+<p id="server">
+⏳ Pripájam server...
+</p>
+
+</div>
+
+<div id="bankSection">
+
+<div class="card">
+
+<h2>🏦 Bank</h2>
+
+<p>
+Bank je hlavný zostatok účtu.
+</p>
+
+</div>
+
+</div>
+
+<div id="miningSection" class="hidden">
+
+<div class="card">
+
+<h2>⛏️ Mining</h2>
+
+<label>
+Suma z Banku do Mining
+</label>
+
+<input
+  id="mineAmount"
+  type="number"
+  min="1"
+  placeholder="Napr. 1000"
+>
+
+<button onclick="toMining()">
+⬇️ Presunúť do Mining
+</button>
+
+<label>
+Dĺžka mining cyklu
+</label>
+
+<select id="days">
+
+<option value="1">
+1 deň — 0,67 %
+</option>
+
+<option value="5">
+5 dní — 3,33 %
+</option>
+
+<option value="10">
+10 dní — 8 %
+</option>
+
+<option value="20">
+20 dní — 16,67 %
+</option>
+
+<option value="30">
+30 dní — 26,67 %
+</option>
+
+</select>
+
+<button onclick="startMining()">
+▶️ Spustiť mining
+</button>
+
+<div id="miningMsg"></div>
+
+</div>
+
+<div class="card">
+
+<h2>📊 Mining cykly</h2>
+
+<div id="cycles">
+Žiadne cykly.
+</div>
+
+</div>
+
+</div>
+
+<div id="withdrawSection" class="hidden">
+
+<div class="card">
+
+<h2>💳 Výber</h2>
+
+<p>
+Minimum výberu: <strong>100 sat</strong>
+</p>
+
+<input
+  id="withdrawAmount"
+  type="number"
+  min="100"
+  placeholder="Suma v sat"
+>
+
+<select id="withdrawMethod">
+
+<option value="BTC">
+BTC
+</option>
+
+<option value="FaucetPay">
+FaucetPay
+</option>
+
+</select>
+
+<input
+  id="withdrawAddress"
+  placeholder="Adresa / FaucetPay účet"
+>
+
+<button onclick="withdraw()">
+📤 Požiadať o výber
+</button>
+
+<div id="withdrawMsg"></div>
+
+<p>
+<strong>Poznámka:</strong>
+výber sa zatiaľ uloží ako
+<strong>pending</strong>.
+Automatické odoslanie BTC ešte nie je pripojené.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
 
 <script>
 
 const API =
-  "https://ancient-mud-7b85.pazuriktomo.workers.dev";
+"https://ancient-mud-7b85.pazuriktomo.workers.dev";
+
+let userId =
+localStorage.getItem("lili_user") || "";
 
 
-const RATES = {
-  1: 0.0067,
-  5: 0.0333,
-  10: 0.08,
-  20: 0.1667,
-  30: 0.2667
-};
+/* HELP */
 
+function msg(id,text,ok=false){
 
-let token =
-  localStorage.getItem("lili_token") || "";
-
-
-let currentUser =
-  localStorage.getItem("lili_user") || "";
-
-
-let state = {
-  user: {
-    id: "",
-    email: "",
-    bank_sats: 0,
-    mining_sats: 0
-  },
-  mining: []
-};
-
-
-/* ================= POMOCNÉ ================= */
-
-function sat(value){
-
-  const number =
-    Math.floor(Number(value) || 0);
-
-  return number;
-}
-
-
-function formatSat(value){
-
-  return (
-    sat(value).toLocaleString("sk-SK") +
-    " sat"
-  );
-}
-
-
-function message(
-  id,
-  text,
-  success = false
-){
-
-  const element =
+  const el =
     document.getElementById(id);
 
-  if(!element){
-    return;
-  }
+  el.className =
+    ok
+    ? "msg success"
+    : "msg error";
 
-  element.className =
-    success
-      ? "message success"
-      : "message error";
-
-  element.textContent =
+  el.textContent =
     text;
 }
 
 
-/* ================= API ================= */
+/* API */
 
-async function api(
-  path,
-  options = {}
-){
+async function api(path,options={}){
 
-  try{
-
-    const headers =
+  const response =
+    await fetch(
+      API + path,
       {
-        ...(options.headers || {})
-      };
-
-    headers["Content-Type"] =
-      "application/json";
-
-    if(token){
-
-      headers["Authorization"] =
-        "Bearer " + token;
-
-    }
-
-
-    const response =
-      await fetch(
-        API + path,
-        {
-          ...options,
-          headers
+        ...options,
+        headers:{
+          "Content-Type":
+            "application/json",
+          ...(options.headers || {})
         }
-      );
+      }
+    );
 
+  const data =
+    await response.json();
 
-    const data =
-      await response
-        .json()
-        .catch(
-          () => ({
-            ok: false,
-            error:
-              "Server vrátil neplatnú odpoveď."
-          })
-        );
+  if(!data.ok){
 
-
-    return data;
-
-  }catch(error){
-
-    return {
-      ok: false,
-      error:
-        "Nepodarilo sa spojiť s Workerom: " +
-        error.message
-    };
-
+    throw new Error(
+      data.error ||
+      "Serverová chyba."
+    );
   }
 
+  return data;
 }
 
 
-/* ================= REFERRAL ================= */
+/* REGISTRÁCIA */
 
-function loadReferralFromUrl(){
+async function register(){
 
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-  const ref =
-    params.get("ref");
-
-  if(!ref){
-    return;
-  }
-
-
-  const input =
-    document.getElementById(
-      "registerRef"
-    );
-
-  if(input){
-
-    input.value =
-      ref;
-
-    input.readOnly =
-      true;
-
-    input.style.background =
-      "#f1f5f9";
-
-  }
-
-}
-
-
-/* ================= REGISTRÁCIA ================= */
-
-async function registerUser(){
-
-  const userId =
+  const id =
     document
-      .getElementById(
-        "registerUser"
-      )
+      .getElementById("regUser")
       .value
       .trim()
       .toLowerCase();
-
-
-  const email =
-    document
-      .getElementById(
-        "registerEmail"
-      )
-      .value
-      .trim()
-      .toLowerCase();
-
 
   const password =
     document
-      .getElementById(
-        "registerPassword"
-      )
+      .getElementById("regPass")
       .value;
 
-
-  const referrerId =
+  const ref =
     document
-      .getElementById(
-        "registerRef"
-      )
+      .getElementById("regRef")
       .value
       .trim()
       .toLowerCase();
 
 
-  if(userId.length < 3){
+  if(!id){
 
-    message(
-      "authMessage",
-      "Používateľské ID musí mať aspoň 3 znaky."
+    msg(
+      "authMsg",
+      "Zadaj používateľské ID."
     );
 
     return;
-
-  }
-
-
-  if(!email.includes("@")){
-
-    message(
-      "authMessage",
-      "Zadaj platný e-mail."
-    );
-
-    return;
-
   }
 
 
   if(password.length < 6){
 
-    message(
-      "authMessage",
+    msg(
+      "authMsg",
       "Heslo musí mať aspoň 6 znakov."
     );
 
     return;
-
   }
 
 
-  const data =
-    await api(
-      "/api/register",
-      {
-        method: "POST",
+  try{
 
-        body:
-          JSON.stringify({
-            user_id: userId,
-            email: email,
-            password: password,
-            referrer_id: referrerId
-          })
-      }
+    const data =
+      await api(
+        "/api/register",
+        {
+          method:"POST",
+
+          body:
+            JSON.stringify({
+              user_id:id,
+              password:password,
+              referrer_id:ref
+            })
+        }
+      );
+
+
+    userId =
+      data.user_id;
+
+    localStorage.setItem(
+      "lili_user",
+      userId
     );
 
 
-  if(!data.ok){
-
-    message(
-      "authMessage",
-      data.error ||
-      "Registrácia zlyhala."
+    msg(
+      "authMsg",
+      "✅ Registrácia úspešná.",
+      true
     );
 
-    return;
+
+    showApp();
+
+    await loadState();
+
+
+  }catch(error){
+
+    msg(
+      "authMsg",
+      "⚠️ " + error.message
+    );
 
   }
-
-
-  token =
-    data.token;
-
-  currentUser =
-    data.user_id;
-
-
-  localStorage.setItem(
-    "lili_token",
-    token
-  );
-
-  localStorage.setItem(
-    "lili_user",
-    currentUser
-  );
-
-
-  showApp();
-
-  showPage("bank");
-
-  await refresh();
 
 }
 
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 
-async function loginUser(){
+async function login(){
 
-  const login =
+  const id =
     document
-      .getElementById(
-        "loginValue"
-      )
+      .getElementById("loginUser")
       .value
       .trim()
       .toLowerCase();
 
-
   const password =
     document
-      .getElementById(
-        "loginPassword"
-      )
+      .getElementById("loginPass")
       .value;
 
 
-  const data =
-    await api(
-      "/api/login",
-      {
-        method: "POST",
+  try{
 
-        body:
-          JSON.stringify({
-            login: login,
-            password: password
-          })
-      }
+    const data =
+      await api(
+        "/api/login",
+        {
+          method:"POST",
+
+          body:
+            JSON.stringify({
+              user_id:id,
+              password:password
+            })
+        }
+      );
+
+
+    userId =
+      data.user_id;
+
+    localStorage.setItem(
+      "lili_user",
+      userId
     );
 
 
-  if(!data.ok){
+    showApp();
 
-    message(
-      "authMessage",
-      data.error ||
-      "Prihlásenie zlyhalo."
+    await loadState();
+
+
+  }catch(error){
+
+    msg(
+      "authMsg",
+      "⚠️ " + error.message
     );
-
-    return;
 
   }
-
-
-  token =
-    data.token;
-
-  currentUser =
-    data.user_id;
-
-
-  localStorage.setItem(
-    "lili_token",
-    token
-  );
-
-  localStorage.setItem(
-    "lili_user",
-    currentUser
-  );
-
-
-  showApp();
-
-  showPage("bank");
-
-  await refresh();
 
 }
 
 
-/* ================= LOGOUT ================= */
+/* APP */
+
+function showApp(){
+
+  document
+    .getElementById("auth")
+    .classList
+    .add("hidden");
+
+  document
+    .getElementById("app")
+    .classList
+    .remove("hidden");
+
+  document
+    .getElementById("currentUser")
+    .textContent =
+    " " + userId;
+
+}
+
 
 function logout(){
-
-  token = "";
-
-  currentUser = "";
-
-
-  localStorage.removeItem(
-    "lili_token"
-  );
 
   localStorage.removeItem(
     "lili_user"
   );
 
+  userId = "";
+
+  location.reload();
+
+}
+
+
+function show(id){
 
   document
-    .getElementById(
-      "appSection"
+    .querySelectorAll(
+      "#bankSection,#miningSection,#withdrawSection"
     )
-    .classList
-    .add("hidden");
-
+    .forEach(
+      el =>
+        el.classList.add("hidden")
+    );
 
   document
-    .getElementById(
-      "authSection"
-    )
+    .getElementById(id)
     .classList
     .remove("hidden");
 
 }
 
 
-/* ================= APP ================= */
+/* STATE */
 
-function showApp(){
+async function loadState(){
 
-  document
-    .getElementById(
-      "authSection"
-    )
-    .classList
-    .add("hidden");
+  try{
 
-
-  document
-    .getElementById(
-      "appSection"
-    )
-    .classList
-    .remove("hidden");
+    const data =
+      await api(
+        "/api/state?user_id=" +
+        encodeURIComponent(userId)
+      );
 
 
-  document
-    .getElementById(
-      "userId"
-    )
-    .textContent =
-    currentUser;
+    document
+      .getElementById("bank")
+      .textContent =
+      Number(
+        data.bank_sats
+      ).toLocaleString("sk-SK") +
+      " sat";
 
 
-  updateReferralLink();
-
-}
-
-
-/* ================= STRÁNKY ================= */
-
-function showPage(name){
-
-  const pages = [
-    "bankPage",
-    "miningPage",
-    "providersPage",
-    "referralsPage",
-    "withdrawPage",
-    "historyPage"
-  ];
+    document
+      .getElementById("mining")
+      .textContent =
+      Number(
+        data.mining_sats
+      ).toLocaleString("sk-SK") +
+      " sat";
 
 
-  pages.forEach(
-    function(id){
+    document
+      .getElementById("server")
+      .textContent =
+      "🟢 Server online";
 
-      const page =
-        document.getElementById(id);
-
-      if(page){
-        page.classList.add("hidden");
-      }
-
-    }
-  );
-
-const target =
-    document.getElementById(
-      name + "Page"
+renderCycles(
+      data.cycles || []
     );
 
 
-  if(target){
-    target.classList.remove("hidden");
-  }
+  }catch(error){
 
+    document
+      .getElementById("server")
+      .textContent =
+      "🔴 " + error.message;
 
-  if(name === "history"){
-    loadHistory();
   }
 
 }
 
 
-/* ================= REFRESH ================= */
+/* BANK → MINING */
 
-async function refresh(){
-
-  if(!token){
-    return;
-  }
-
-
-  const data =
-    await api(
-      "/api/state"
-    );
-
-
-  if(!data.ok){
-
-    if(
-      data.error ===
-      "Nie si prihlaseny."
-    ){
-
-      logout();
-
-    }
-
-    return;
-
-  }
-
-
-  state =
-    data;
-
-
-  const user =
-    data.user || {};
-
-
-  const bank =
-    sat(user.bank_sats);
-
-
-  const mining =
-    sat(user.mining_sats);
-
-
-  document
-    .getElementById(
-      "bankBalance"
-    )
-    .textContent =
-    formatSat(bank);
-
-
-  document
-    .getElementById(
-      "bankLarge"
-    )
-    .textContent =
-    formatSat(bank);
-
-
-  document
-    .getElementById(
-      "miningBalance"
-    )
-    .textContent =
-    formatSat(mining);
-
-
-  document
-    .getElementById(
-      "totalBalance"
-    )
-    .textContent =
-    formatSat(
-      bank + mining
-    );
-
-
-  renderCycles();
-
-  await loadReferrals();
-
-}
-
-
-/* ================= MINING CALCULATOR ================= */
-
-function calculateMining(){
+async function toMining(){
 
   const amount =
-    sat(
-      document
-        .getElementById(
-          "miningDeposit"
-        )
-        .value
-    );
-
-
-  const days =
     Number(
       document
-        .getElementById(
-          "miningDays"
-        )
+        .getElementById("mineAmount")
         .value
     );
 
 
-  const rate =
-    RATES[days];
+  try{
 
-
-  const profit =
-    Math.floor(
-      amount * rate
-    );
-
-
-  const total =
-    amount + profit;
-
-
-  document
-    .getElementById(
-      "calcPrincipal"
-    )
-    .textContent =
-    formatSat(amount);
-
-
-  document
-    .getElementById(
-      "calcDays"
-    )
-    .textContent =
-    days === 1
-      ? "1 deň"
-      : days + " dní";
-
-
-  document
-    .getElementById(
-      "calcRate"
-    )
-    .textContent =
-    (rate * 100).toLocaleString(
-      "sk-SK",
-      {
-        maximumFractionDigits: 2
-      }
-    ) + " %";
-
-
-  document
-    .getElementById(
-      "calcProfit"
-    )
-    .textContent =
-    formatSat(profit);
-
-
-  document
-    .getElementById(
-      "calcTotal"
-    )
-    .textContent =
-    formatSat(total);
-
-}
-
-
-/* ================= BANK → MINING ================= */
-
-async function depositToMining(){
-
-  const amount =
-    sat(
-      document
-        .getElementById(
-          "miningDeposit"
-        )
-        .value
-    );
-
-
-  if(amount <= 0){
-
-    message(
-      "miningMessage",
-      "Zadaj sumu."
-    );
-
-    return;
-
-  }
-
-
-  const bank =
-    sat(
-      state.user &&
-      state.user.bank_sats
-    );
-
-
-  if(amount > bank){
-
-    message(
-      "miningMessage",
-      "V Banku nemáš dostatok satoshi."
-    );
-
-    return;
-
-  }
-
-
-  const data =
     await api(
       "/api/bank/to-mining",
       {
-        method: "POST",
+        method:"POST",
 
         body:
           JSON.stringify({
-            amount_sats: amount
+            user_id:userId,
+            amount_sats:amount
           })
       }
     );
 
 
-  if(!data.ok){
-
-    message(
-      "miningMessage",
-      data.error ||
-      "Presun zlyhal."
+    msg(
+      "miningMsg",
+      "✅ Suma bola presunutá do Mining.",
+      true
     );
 
-    return;
+
+    document
+      .getElementById("mineAmount")
+      .value = "";
+
+
+    await loadState();
+
+
+  }catch(error){
+
+    msg(
+      "miningMsg",
+      "⚠️ " + error.message
+    );
 
   }
-
-
-  message(
-    "miningMessage",
-    "Do Mining bolo vložených " +
-    formatSat(amount) +
-    ".",
-    true
-  );
-
-
-  document
-    .getElementById(
-      "miningDeposit"
-    )
-    .value = "";
-
-
-  calculateMining();
-
-  await refresh();
 
 }
 
 
-/* ================= START MINING ================= */
+/* START MINING */
 
 async function startMining(){
-
-  const amount =
-    sat(
-      state.user &&
-      state.user.mining_sats
-    );
-
-
-  if(amount <= 0){
-
-    message(
-      "miningMessage",
-      "Najprv vlož sumu z Banku do Mining."
-    );
-
-    return;
-
-  }
-
 
   const days =
     Number(
       document
-        .getElementById(
-          "miningDays"
-        )
+        .getElementById("days")
         .value
     );
 
 
-  const rate =
-    RATES[days];
+  try{
 
-
-  const profit =
-    Math.floor(
-      amount * rate
-    );
-
-
-  const total =
-    amount + profit;
-
-const confirmed =
-    window.confirm(
-      "Spustiť mining?\n\n" +
-      "Vklad: " +
-      formatSat(amount) +
-      "\n" +
-      "Dĺžka: " +
-      days +
-      (days === 1 ? " deň" : " dní") +
-      "\n" +
-      "Sadzba: " +
-      (rate * 100) +
-      " %" +
-      "\n" +
-      "Zisk: " +
-      formatSat(profit) +
-      "\n" +
-      "Výsledná suma: " +
-      formatSat(total)
-    );
-
-
-  if(!confirmed){
-    return;
-  }
-
-
-  const data =
     await api(
       "/api/mining/start",
       {
-        method: "POST",
+        method:"POST",
 
         body:
           JSON.stringify({
-            duration_days: days
+            user_id:userId,
+            duration_days:days
           })
       }
     );
 
 
-  if(!data.ok){
-
-    message(
-      "miningMessage",
-      data.error ||
-      "Mining sa nepodarilo spustiť."
+    msg(
+      "miningMsg",
+      "✅ Mining spustený.",
+      true
     );
 
-    return;
+
+    await loadState();
+
+
+  }catch(error){
+
+    msg(
+      "miningMsg",
+      "⚠️ " + error.message
+    );
 
   }
-
-
-  message(
-    "miningMessage",
-    "Mining spustený. Očakávaná výsledná suma: " +
-    formatSat(data.final_sats),
-    true
-  );
-
-
-  await refresh();
 
 }
 
 
-/* ================= MINING CYCLES ================= */
+/* CYCLES */
 
-function renderCycles(){
+function renderCycles(cycles){
 
   const box =
     document.getElementById(
@@ -1656,460 +807,166 @@ function renderCycles(){
     );
 
 
-  const cycles =
-    state.mining || [];
-
-
   if(!cycles.length){
 
     box.textContent =
-      "Žiadne aktívne mining cykly.";
+      "Žiadne mining cykly.";
 
     return;
 
   }
 
 
-  let html = "";
+  box.innerHTML =
+    cycles.map(
+      cycle => {
+
+        const principal =
+          Number(
+            cycle.principal_sats || 0
+          );
 
 
-  cycles.forEach(
-    function(cycle){
-
-      const principal =
-        sat(
-          cycle.principal_sats
-        );
+        const days =
+          Number(
+            cycle.duration_days
+          );
 
 
-      const profit =
-        sat(
-          cycle.profit_sats
-        );
+        const rates = {
+          1:0.0067,
+          5:0.0333,
+          10:0.08,
+          20:0.1667,
+          30:0.2667
+        };
 
 
-      const finalAmount =
-        sat(
-          cycle.final_sats
-        );
+        const profit =
+          Math.floor(
+            principal *
+            (rates[days] || 0)
+          );
 
 
-      const progress =
-        Math.round(
-          Number(cycle.progress || 0) *
-          100
-        );
+        return 
+          <div class="cycle">
 
-
-      const end =
-        Number(
-          cycle.end_at
-        );
-
-
-      const endText =
-        Number.isFinite(end) && end > 0
-          ? new Date(end).toLocaleString("sk-SK")
-          : "—";
-
-
-      html += 
-        <div class="provider">
-
-          <strong>
-            ⛏️ ${cycle.duration_days} dní
-          </strong>
-
-          <p>
-            Vklad:
             <strong>
-              ${formatSat(principal)}
+              ⛏️ Cyklus #${cycle.id}
             </strong>
-          </p>
 
-          <p>
-            Očakávaný zisk:
-            <strong>
-              ${formatSat(profit)}
-            </strong>
-          </p>
+            <p>
+              Vklad:
+              ${principal.toLocaleString("sk-SK")}
+              sat
+            </p>
 
-          <p>
-            Výsledná suma:
-            <strong>
-              ${formatSat(finalAmount)}
-            </strong>
-          </p>
+            <p>
+              Dĺžka:
+              ${days} dní
+            </p>
 
-          <p>
-            Koniec:
-            ${endText}
-          </p>
+            <p>
+              Očakávaný zisk:
+              ${profit.toLocaleString("sk-SK")}
+              sat
+            </p>
 
-          <div class="progress">
-            <div
-              class="progress-bar"
-              style="width:${progress}%"
-            ></div>
+            <p>
+              Stav:
+              ${cycle.status}
+            </p>
+
+            <p>
+              Koniec:
+              ${new Date(
+                cycle.ends_at
+              ).toLocaleString("sk-SK")}
+            </p>
+
           </div>
+        ;
 
-          <p class="small">
-            Priebeh: ${progress} %
-          </p>
-
-        </div>
-      ;
-
-    }
-  );
-
-
-  box.innerHTML =
-    html;
-
-}
-
-
-/* ================= REFERRAL LINK ================= */
-
-function updateReferralLink(){
-
-  const url =
-    window.location.origin +
-    window.location.pathname +
-    "?ref=" +
-    encodeURIComponent(
-      currentUser
-    );
-
-
-  document
-    .getElementById(
-      "referralLink"
+      }
     )
-    .value =
-    url;
+    .join("");
 
 }
 
 
-/* ================= REFERRALS ================= */
-
-async function loadReferrals(){
-
-  const data =
-    await api(
-      "/api/referrals"
-    );
-
-
-  if(!data.ok){
-    return;
-  }
-
-
-  document
-    .getElementById(
-      "referralCount"
-    )
-    .textContent =
-    data.count || 0;
-
-}
-
-
-async function copyReferral(){
-
-  const input =
-    document
-      .getElementById(
-        "referralLink"
-      );
-
-
-  try{
-
-    await navigator.clipboard.writeText(
-      input.value
-    );
-
-  }catch(error){
-
-    input.select();
-
-    document.execCommand(
-      "copy"
-    );
-
-  }
-
-
-  message(
-    "referralMessage",
-    "Referral odkaz bol skopírovaný.",
-    true
-  );
-
-}
-
-
-/* ================= HISTÓRIA ================= */
-
-async function loadHistory(){
-
-  const box =
-    document.getElementById(
-      "history"
-    );
-
-
-  if(!token){
-
-    box.textContent =
-      "Nie si prihlásený.";
-
-    return;
-
-  }
-
-
-  const data =
-    await api(
-      "/api/transactions"
-    );
-
-
-  if(!data.ok){
-
-box.textContent =
-      data.error ||
-      "Históriu sa nepodarilo načítať.";
-
-    return;
-
-  }
-
-
-  const rows =
-    data.transactions || [];
-
-
-  if(!rows.length){
-
-    box.textContent =
-      "Zatiaľ žiadna história.";
-
-    return;
-
-  }
-
-
-  let html = 
-    <table>
-
-      <thead>
-        <tr>
-          <th>Dátum</th>
-          <th>Typ</th>
-          <th>Suma</th>
-          <th>Popis</th>
-        </tr>
-      </thead>
-
-      <tbody>
-  ;
-
-
-  rows.forEach(
-    function(row){
-
-      const date =
-        Number(row.created_at);
-
-
-      const dateText =
-        Number.isFinite(date)
-          ? new Date(date).toLocaleString("sk-SK")
-          : "—";
-
-
-      html += 
-        <tr>
-
-          <td>
-            ${dateText}
-          </td>
-
-          <td>
-            ${row.type || ""}
-          </td>
-
-          <td>
-            ${formatSat(row.amount_sats)}
-          </td>
-
-          <td>
-            ${row.description || ""}
-          </td>
-
-        </tr>
-      ;
-
-    }
-  );
-
-
-  html += 
-      </tbody>
-
-    </table>
-  ;
-
-
-  box.innerHTML =
-    html;
-
-}
-
-
-/* ================= WITHDRAW ================= */
+/* WITHDRAW */
 
 async function withdraw(){
 
   const amount =
-    sat(
+    Number(
       document
-        .getElementById(
-          "withdrawAmount"
-        )
+        .getElementById("withdrawAmount")
         .value
     );
 
-
   const method =
     document
-      .getElementById(
-        "withdrawMethod"
-      )
+      .getElementById("withdrawMethod")
       .value;
-
 
   const address =
     document
-      .getElementById(
-        "withdrawAddress"
-      )
+      .getElementById("withdrawAddress")
       .value
       .trim();
 
 
-  if(amount < 100){
+  try{
 
-    message(
-      "withdrawMessage",
-      "Minimum výberu je 100 sat."
-    );
-
-    return;
-
-  }
-
-
-  if(!address){
-
-    message(
-      "withdrawMessage",
-      "Zadaj BTC adresu alebo FaucetPay účet."
-    );
-
-    return;
-
-  }
-
-
-  const data =
     await api(
       "/api/withdraw",
       {
-        method: "POST",
+        method:"POST",
 
         body:
           JSON.stringify({
-            amount_sats: amount,
-            method: method,
-            address: address
+            user_id:userId,
+            amount_sats:amount,
+            method:method,
+            address:address
           })
       }
     );
 
 
-  if(!data.ok){
-
-    message(
-      "withdrawMessage",
-      data.error ||
-      "Výber zlyhal."
+    msg(
+      "withdrawMsg",
+      "✅ Žiadosť o výber bola vytvorená.",
+      true
     );
 
-    return;
 
-  }
-
-
-  message(
-    "withdrawMessage",
-    data.message ||
-    "Žiadosť o výber bola vytvorená.",
-    true
-  );
+    await loadState();
 
 
-  document
-    .getElementById(
-      "withdrawAmount"
-    )
-    .value = "";
+  }catch(error){
 
-
-  document
-    .getElementById(
-      "withdrawAddress"
-    )
-    .value = "";
-
-
-  await refresh();
-
-}
-
-
-/* ================= START ================= */
-
-function start(){
-
-  loadReferralFromUrl();
-
-
-  if(
-    token &&
-    currentUser
-  ){
-
-    showApp();
-
-    showPage("bank");
-
-    refresh();
+    msg(
+      "withdrawMsg",
+      "⚠️ " + error.message
+    );
 
   }
 
 }
 
 
-document.addEventListener(
-  "DOMContentLoaded",
-  start
-);
+/* START */
+
+if(userId){
+
+  showApp();
+
+  loadState();
+
+}
 
 </script>
 
