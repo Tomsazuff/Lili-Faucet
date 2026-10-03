@@ -1326,7 +1326,25 @@ function secureEqual(a, b) {
   }
 
   return diff === 0;
-}async function octoClixPostback(request, env) {
+}async function getBtcUsdtPrice() {
+  const response = await fetch(
+    "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+  );
+
+  if (!response.ok) {
+    throw new Error("BTC/USDT kurz je dočasne nedostupný.");
+  }
+
+  const data = await response.json();
+  const price = Number(data?.price);
+
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new Error("Neplatná BTC/USDT cena.");
+  }
+
+  return price;
+}
+async function octoClixPostback(request, env) {
   const secret = clean(env.OCTOCLIX_SECRET_KEY);
 
   if (!secret) {
@@ -1414,7 +1432,42 @@ function secureEqual(a, b) {
       }
     });
   }
+const usd = Number(rewardUsd);
 
+if (!Number.isFinite(usd) || usd <= 0) {
+  return new Response("invalid_reward_usd", {
+    status: 400,
+    headers: {
+      "Content-Type": "text/plain; charset=UTF-8"
+    }
+  });
+}
+
+const user = await env.DB
+  .prepare(
+    `SELECT id
+     FROM users
+     WHERE user_id = ?
+     LIMIT 1`
+  )
+  .bind(userId)
+  .first();
+
+if (!user) {
+  return new Response("user_not_found", {
+    status: 404,
+    headers: {
+      "Content-Type": "text/plain; charset=UTF-8"
+    }
+  });
+}
+
+const btcUsdt = await getBtcUsdtPrice();
+
+const rewardSats = Math.max(
+  1,
+  Math.floor((usd / btcUsdt) * 100000000)
+);
 await env.DB.batch([
   env.DB
     .prepare(
