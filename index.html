@@ -124,6 +124,15 @@ pre{
   padding:12px;
   border-radius:8px;
 }
+
+.currency-status{
+  margin-top:10px;
+  padding:10px;
+  border-radius:8px;
+  background:#f8fafc;
+  color:#475569;
+  font-size:14px;
+}
 </style>
 </head>
 
@@ -210,6 +219,34 @@ Odhlásiť
 </button>
 
 </nav>
+
+
+<div class="card">
+
+<h2>💱 Zobrazenie zostatku</h2>
+
+<select id="displayCurrency" onchange="saveCurrency();updateBalances()">
+
+<option value="SAT">
+BTC (sat)
+</option>
+
+<option value="USDT">
+USDT
+</option>
+
+</select>
+
+<p class="muted">
+Interný zostatok sa vedie v satoshi.
+USDT je iba prepočet podľa aktuálneho BTC/USDT kurzu.
+</p>
+
+<div id="currencyStatus" class="currency-status">
+⏳ Načítavam kurz BTC/USDT...
+</div>
+
+</div>
 
 
 <div class="card">
@@ -309,7 +346,8 @@ placeholder="BTC adresa / FaucetPay účet">
 <div id="withdrawMsg"></div>
 
 <p class="muted">
-Žiadosť sa zatiaľ vytvorí ako pending. Automatické odoslanie výplaty bude doplnené neskôr.
+Žiadosť sa zatiaľ vytvorí ako pending.
+Automatické odoslanie výplaty bude doplnené neskôr.
 </p>
 
 </div>
@@ -458,11 +496,12 @@ PTC ponuky sa načítajú cez Cloudflare Worker.
 <h2>🔌 OctoClick</h2>
 
 <p>
-OctoClick zatiaľ nie je aktívne zapojený.
+OctoClick je napojený cez Cloudflare Worker.
 </p>
 
 <p class="muted">
-Napojenie doplníme samostatne po overení jeho aktuálneho API/postback nastavenia.
+Odmeny z postbacku sa pripisujú do Banku v satoshi.
+Testovací postback sa neúčtuje.
 </p>
 
 </div>
@@ -479,6 +518,16 @@ const API =
 
 let userId =
 localStorage.getItem("lili_user") || "";
+
+let currentState = null;
+
+let displayCurrency =
+localStorage.getItem("lili_currency") || "SAT";
+
+let btcUsdtPrice = 0;
+
+let priceInterval = null;
+
 
 const RATES = {
   1:0.0067,
@@ -500,7 +549,7 @@ function message(id,text,success=false){
 
   if(!el)return;
 
-  el.className=
+  el.className =
     "msg "+(success?"success":"error");
 
   el.textContent=text;
@@ -509,7 +558,7 @@ function message(id,text,success=false){
 
 async function api(path,options={}){
 
-  const response=
+  const response =
     await fetch(
       API+path,
       {
@@ -542,18 +591,173 @@ async function api(path,options={}){
 }
 
 
+/* CURRENCY */
+
+function loadCurrency(){
+
+  const select =
+    $("displayCurrency");
+
+  if(select){
+    select.value =
+      displayCurrency;
+  }
+}
+
+
+function saveCurrency(){
+
+  const select =
+    $("displayCurrency");
+
+  if(!select)return;
+
+  displayCurrency =
+    select.value;
+
+  localStorage.setItem(
+    "lili_currency",
+    displayCurrency
+  );
+}
+
+
+function formatBalance(sats){
+
+  sats =
+    Number(sats)||0;
+
+  if(displayCurrency === "USDT"){
+
+    if(!btcUsdtPrice){
+
+      return "Načítavam...";
+    }
+
+    const usdt =
+      (sats / 100000000) *
+      btcUsdtPrice;
+
+    return (
+      usdt.toFixed(6) +
+      " USDT"
+    );
+  }
+
+  return (
+    sats.toLocaleString("sk-SK") +
+    " sat"
+  );
+}
+
+
+function updateBalances(){
+
+  if(!currentState)return;
+
+  $("bank").textContent =
+    formatBalance(
+      currentState.bank_sats||0
+    );
+
+  $("mining").textContent =
+    formatBalance(
+      currentState.mining_sats||0
+    );
+}
+
+
+async function loadBtcPrice(){
+
+  try{
+
+    const response =
+      await fetch(
+        API+"/api/price"
+      );
+
+    const data =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !data.ok ||
+      !Number.isFinite(
+        Number(data.btc_usdt)
+      ) ||
+      Number(data.btc_usdt)<=0
+    ){
+
+      throw new Error(
+        "Kurz nie je dostupný."
+      );
+    }
+
+    btcUsdtPrice =
+      Number(data.btc_usdt);
+
+    $("currencyStatus").textContent =
+      "🟢 BTC/USDT kurz: "+
+      btcUsdtPrice.toLocaleString(
+        "en-US",
+        {
+          minimumFractionDigits:2,
+          maximumFractionDigits:2
+        }
+      )+
+      " USDT za 1 BTC";
+
+    updateBalances();
+
+  }catch(error){
+
+    $("currencyStatus").textContent =
+      "🔴 Kurz BTC/USDT sa nepodarilo načítať.";
+
+    if(displayCurrency==="USDT"){
+
+      $("bank").textContent =
+        "Kurz nedostupný";
+
+      $("mining").textContent =
+        "Kurz nedostupný";
+    }
+  }
+}
+
+
+function startPriceRefresh(){
+
+  if(priceInterval){
+    clearInterval(priceInterval);
+  }
+
+  loadBtcPrice();
+
+  priceInterval =
+    setInterval(
+      loadBtcPrice,
+      60000
+    );
+}
+
+
 /* REGISTRATION */
 
 async function register(){
 
-  const id=
-    $("regUser").value.trim().toLowerCase();
+  const id =
+    $("regUser").value
+    .trim()
+    .toLowerCase();
 
-  const password=
+  const password =
     $("regPass").value;
 
-  const ref=
-    $("regRef").value.trim().toLowerCase();
+  const ref =
+    $("regRef").value
+    .trim()
+    .toLowerCase();
 
   if(!id){
 
@@ -577,7 +781,7 @@ async function register(){
 
   try{
 
-    const data=
+    const data =
       await api(
         "/api/register",
         {
@@ -621,10 +825,12 @@ async function register(){
 
 async function login(){
 
-  const id=
-    $("loginUser").value.trim().toLowerCase();
+  const id =
+    $("loginUser").value
+    .trim()
+    .toLowerCase();
 
-  const password=
+  const password =
     $("loginPass").value;
 
   if(!id || !password){
@@ -639,7 +845,7 @@ async function login(){
 
   try{
 
-    const data=
+    const data =
       await api(
         "/api/login",
         {
@@ -676,30 +882,46 @@ async function login(){
 
 function openApp(){
 
-  $("auth").classList.add("hidden");
+  $("auth")
+    .classList
+    .add("hidden");
 
-  $("app").classList.remove("hidden");
+  $("app")
+    .classList
+    .remove("hidden");
 
-  $("currentUser").textContent=
+  $("currentUser")
+    .textContent =
     userId;
 
-  $("refLink").value=
+  $("refLink").value =
     location.origin+
     location.pathname+
     "?ref="+
     encodeURIComponent(userId);
 
+  loadCurrency();
+
   showTab("bankTab");
+
+  startPriceRefresh();
 }
 
 
 function logout(){
+
+  if(priceInterval){
+    clearInterval(priceInterval);
+    priceInterval=null;
+  }
 
   localStorage.removeItem(
     "lili_user"
   );
 
   userId="";
+
+  currentState=null;
 
   location.reload();
 }
@@ -714,6 +936,7 @@ function showTab(id){
   ].forEach(
     x=>{
       const el=$(x);
+
       if(el){
         el.classList.add("hidden");
       }
@@ -736,26 +959,22 @@ async function loadState(){
 
   try{
 
-    const data=
+    const data =
       await api(
         "/api/state?user_id="+
         encodeURIComponent(userId)
       );
 
-    $("bank").textContent=
-      Number(data.bank_sats||0)
-      .toLocaleString("sk-SK")+
-      " sat";
+    currentState=data;
 
-    $("mining").textContent=
-      Number(data.mining_sats||0)
-      .toLocaleString("sk-SK")+
-      " sat";
+    updateBalances();
 
-    $("refCount").textContent=
-      Number(data.referral_count||0);
+    $("refCount").textContent =
+      Number(
+        data.referral_count||0
+      );
 
-    $("server").textContent=
+    $("server").textContent =
       "🟢 Server online";
 
     renderCycles(
@@ -768,7 +987,7 @@ async function loadState(){
 
   }catch(error){
 
-    $("server").textContent=
+    $("server").textContent =
       "🔴 "+error.message;
   }
 }
@@ -778,35 +997,39 @@ async function loadState(){
 
 function calculateMining(){
 
-  const amount=
+  const amount =
     Math.max(
       0,
-      Number($("calcAmount").value)||0
+      Number(
+        $("calcAmount").value
+      )||0
     );
 
-  const days=
-    Number($("days").value);
+  const days =
+    Number(
+      $("days").value
+    );
 
-  const rate=
+  const rate =
     RATES[days]||0;
 
-  const profit=
+  const profit =
     Math.floor(
       amount*rate
     );
 
-  const total=
+  const total =
     amount+profit;
 
-  $("calcPrincipal").textContent=
+  $("calcPrincipal").textContent =
     amount.toLocaleString("sk-SK")+
     " sat";
 
-  $("calcProfit").textContent=
+  $("calcProfit").textContent =
     profit.toLocaleString("sk-SK")+
     " sat";
 
-  $("calcTotal").textContent=
+  $("calcTotal").textContent =
     total.toLocaleString("sk-SK")+
     " sat";
 }
@@ -816,10 +1039,15 @@ function calculateMining(){
 
 async function toMining(){
 
-  const amount=
-    Number($("mineAmount").value);
+  const amount =
+    Number(
+      $("mineAmount").value
+    );
 
-  if(!Number.isFinite(amount) || amount<=0){
+  if(
+    !Number.isFinite(amount) ||
+    amount<=0
+  ){
 
     message(
       "miningMsg",
@@ -866,12 +1094,14 @@ async function toMining(){
 
 async function startMining(){
 
-  const days=
-    Number($("days").value);
+  const days =
+    Number(
+      $("days").value
+    );
 
   try{
 
-    const data=
+    const data =
       await api(
         "/api/mining/start",
         {
@@ -886,8 +1116,9 @@ async function startMining(){
     message(
       "miningMsg",
       "Mining spustený. Koniec: "+
-      new Date(data.ends_at)
-      .toLocaleString("sk-SK"),
+      new Date(
+        data.ends_at
+      ).toLocaleString("sk-SK"),
       true
     );
 
@@ -911,30 +1142,30 @@ function renderCycles(cycles){
 
   if(!cycles.length){
 
-    box.textContent=
+    box.textContent =
       "Žiadne mining cykly.";
 
     return;
   }
 
-  box.innerHTML=
+  box.innerHTML =
     cycles.map(
       cycle=>{
 
-        const principal=
+        const principal =
           Number(
             cycle.principal_sats||0
           );
 
-        const days=
+        const days =
           Number(
             cycle.duration_days||0
           );
 
-        const rate=
+        const rate =
           RATES[days]||0;
 
-        const profit=
+        const profit =
           Number(
             cycle.earned_sats ??
             Math.floor(
@@ -942,7 +1173,7 @@ function renderCycles(cycles){
             )
           );
 
-        const total=
+        const total =
           principal+profit;
 
         return `
@@ -1008,13 +1239,13 @@ function renderHistory(transactions){
 
   if(!transactions.length){
 
-    box.textContent=
+    box.textContent =
       "Žiadne transakcie.";
 
     return;
   }
 
-  box.innerHTML=
+  box.innerHTML =
     transactions.map(
       tx=>`
 
@@ -1056,14 +1287,18 @@ function renderHistory(transactions){
 
 async function withdraw(){
 
-  const amount=
-    Number($("withdrawAmount").value);
+  const amount =
+    Number(
+      $("withdrawAmount").value
+    );
 
-  const method=
+  const method =
     $("withdrawMethod").value;
 
-  const address=
-    $("withdrawAddress").value.trim();
+  const address =
+    $("withdrawAddress")
+    .value
+    .trim();
 
   if(
     !Number.isFinite(amount) ||
@@ -1090,7 +1325,7 @@ async function withdraw(){
 
   try{
 
-    const data=
+    const data =
       await api(
         "/api/withdraw",
         {
@@ -1131,7 +1366,7 @@ async function withdraw(){
 
 async function copyReferral(){
 
-  const value=
+  const value =
     $("refLink").value;
 
   try{
@@ -1157,13 +1392,13 @@ async function loadAoyco(){
 
   try{
 
-    const data=
+    const data =
       await api(
         "/api/providers/aoyco/ptc?user_id="+
         encodeURIComponent(userId)
       );
 
-    $("aoyco").innerHTML=
+    $("aoyco").innerHTML =
       "<pre>"+
       escapeHtml(
         JSON.stringify(
@@ -1176,7 +1411,7 @@ async function loadAoyco(){
 
   }catch(error){
 
-    $("aoyco").textContent=
+    $("aoyco").textContent =
       error.message;
   }
 }
@@ -1199,12 +1434,12 @@ function escapeHtml(value){
 
 function loadReferralFromUrl(){
 
-  const params=
+  const params =
     new URLSearchParams(
       location.search
     );
 
-  const ref=
+  const ref =
     params.get("ref");
 
   if(
@@ -1212,7 +1447,7 @@ function loadReferralFromUrl(){
     !$("regRef").value
   ){
 
-    $("regRef").value=
+    $("regRef").value =
       ref.toLowerCase();
   }
 }
@@ -1222,11 +1457,17 @@ function loadReferralFromUrl(){
 
 loadReferralFromUrl();
 
+loadCurrency();
+
 if(userId){
 
   openApp();
 
   loadState();
+
+}else{
+
+  loadBtcPrice();
 }
 
 calculateMining();
