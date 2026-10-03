@@ -1291,7 +1291,165 @@ async function aoycoPTC(
   );
 }
 
+async function hmacSha256Hex(message, secret) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
 
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(message)
+  );
+
+  return [...new Uint8Array(signature)]
+    .map(x => x.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function secureEqual(a, b) {
+  a = String(a || "").toLowerCase();
+  b = String(b || "").toLowerCase();
+
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  let diff = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return diff === 0;
+}async function octoClixPostback(request, env) {
+  const secret = clean(env.OCTOCLIX_SECRET_KEY);
+
+  if (!secret) {
+    return new Response("octoclick_secret_missing", {
+      status: 500,
+      headers: {
+        "Content-Type": "text/plain; charset=UTF-8"
+      }
+    });
+  }
+
+  const contentType = request.headers.get("Content-Type") || "";
+
+  if (
+    !contentType
+      .toLowerCase()
+      .includes("application/x-www-form-urlencoded")
+  ) {
+    return new Response("invalid_content_type", {
+      status: 400,
+      headers: {
+        "Content-Type": "text/plain; charset=UTF-8"
+      }
+    });
+  }
+
+  const form = await request.formData();
+
+  const userId = clean(form.get("user_id"));
+  const reward = clean(form.get("reward"));
+  const rewardUsd = clean(form.get("reward_usd"));
+  const token = clean(form.get("token"));
+  const signature = clean(form.get("signature"));
+  const isTest =
+    clean(form.get("is_test")).toLowerCase() === "yes";
+
+  if (!userId || !reward || !token || !signature) {
+    return new Response("missing_parameters", {
+      status: 400,
+      headers: {
+        "Content-Type": "text/plain; charset=UTF-8"
+      }
+    });
+  }
+
+  const expected = await hmacSha256Hex(
+    userId + "|" + reward + "|" + token,
+    secret
+  );
+
+  if (!secureEqual(expected, signature)) {
+    return new Response("bad_signature", {
+      status: 401,
+      headers: {
+        "Content-Type": "text/plain; charset=UTF-8"
+      }
+    });
+  }
+
+  const existing = await env.DB
+    .prepare(
+      `SELECT id
+       FROM provider_transactions
+       WHERE provider = 'octoclick'
+       AND trans_id = ?
+       LIMIT 1`
+    )
+    .bind(token)
+    .first();
+
+  if (existing) {
+    return new Response("ok", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=UTF-8"
+      }
+    });
+  }
+
+  if (isTest) {
+    return new Response("ok", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=UTF-8"
+      }
+    });
+  }
+
+  await env.DB
+    .prepare(
+      `INSERT INTO provider_transactions
+       (
+         provider,
+         trans_id,
+         sub_id,
+         reward,
+         status,
+         created_at
+       )
+       VALUES
+       (
+         'octoclick',
+         ?,
+         ?,
+         0,
+         'received',
+         ?
+       )`
+    )
+    .bind(
+      token,
+      userId,
+      now()
+    )
+    .run();
+
+  return new Response("ok", {
+    status: 200,
+    headers: {
+      "Content-Type": "text/plain; charset=UTF-8"
+    }
+  });
+}
 /* =========================
    MAIN WORKER
 ========================= */
@@ -1559,7 +1717,20 @@ export default {
         });
       }
 
+/* =====================
+   OCTOCLIX POSTBACK
+===================== */
 
+if (
+  path ===
+    "/api/providers/octoclick/postback" &&
+  request.method === "POST"
+) {
+  return octoClixPostback(
+    request,
+    env
+  );
+}
       /* =====================
          AOYCO PTC
       ===================== */
