@@ -1415,7 +1415,8 @@ function secureEqual(a, b) {
     });
   }
 
-  await env.DB
+await env.DB.batch([
+  env.DB
     .prepare(
       `INSERT INTO provider_transactions
        (
@@ -1431,17 +1432,60 @@ function secureEqual(a, b) {
          'octoclick',
          ?,
          ?,
-         0,
-         'received',
+         ?,
+         'credited',
          ?
        )`
     )
     .bind(
       token,
       userId,
+      rewardSats,
+      now()
+    ),
+
+  env.DB
+    .prepare(
+      `UPDATE users
+       SET bank_sats = bank_sats + ?
+       WHERE id = ?`
+    )
+    .bind(
+      rewardSats,
+      user.id
+    ),
+
+  env.DB
+    .prepare(
+      `INSERT INTO transactions
+       (
+         user_id,
+         type,
+         amount_sats,
+         bank_change_sats,
+         mining_change_sats,
+         reference,
+         created_at
+       )
+       VALUES
+       (
+         ?,
+         'OCTOCLIX_REWARD',
+         ?,
+         ?,
+         0,
+         ?,
+         ?
+       )`
+    )
+    .bind(
+      user.id,
+      rewardSats,
+      rewardSats,
+      token,
       now()
     )
-    .run();
+]);
 
   return new Response("ok", {
     status: 200,
