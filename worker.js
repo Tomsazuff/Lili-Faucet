@@ -13,33 +13,35 @@ const MINING_RATES = {
 const ALLOWED_DAYS = [1, 5, 10, 20, 30];
 
 
-/* RESPONSE */
+/* =========================
+   RESPONSE / CORS
+========================= */
+
+function corsHeaders() {
+  return {
+    "Content-Type": "application/json; charset=UTF-8",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400"
+  };
+}
+
 
 function json(data, status = 200) {
-
   return new Response(
     JSON.stringify(data, null, 2),
     {
       status,
-      headers: {
-        "Content-Type":
-          "application/json; charset=UTF-8",
-
-        "Access-Control-Allow-Origin":
-          "*",
-
-        "Access-Control-Allow-Methods":
-          "GET,POST,OPTIONS",
-
-        "Access-Control-Allow-Headers":
-          "Content-Type"
-      }
+      headers: corsHeaders()
     }
   );
 }
 
 
-/* HELPERS */
+/* =========================
+   HELPERS
+========================= */
 
 function now() {
   return new Date().toISOString();
@@ -52,16 +54,13 @@ function clean(value) {
 
 
 function rateFor(days) {
-
-  return (
-    MINING_RATES[
-      Number(days)
-    ] || 0
-  );
+  return MINING_RATES[Number(days)] || 0;
 }
 
 
-/* SHA-256 */
+/* =========================
+   PASSWORD HASH
+========================= */
 
 async function sha256(text) {
 
@@ -85,7 +84,9 @@ async function sha256(text) {
 }
 
 
-/* DATABASE */
+/* =========================
+   DATABASE HELPERS
+========================= */
 
 async function addColumn(
   db,
@@ -104,7 +105,7 @@ async function addColumn(
       .run();
 
   } catch (_) {
-    /* Column already exists. */
+    // Column already exists.
   }
 }
 
@@ -113,7 +114,9 @@ async function getUser(db, id) {
 
   return db
     .prepare(
-      "SELECT * FROM users WHERE id = ?"
+      `SELECT *
+       FROM users
+       WHERE id = ?`
     )
     .bind(id)
     .first();
@@ -127,20 +130,19 @@ async function ensureUser(db, id) {
       .toLowerCase();
 
   if (!id) {
-
     throw new Error(
       "Chýba používateľské ID."
     );
   }
 
-  let user =
+  const existing =
     await getUser(
       db,
       id
     );
 
-  if (user) {
-    return user;
+  if (existing) {
+    return existing;
   }
 
   await db
@@ -170,7 +172,9 @@ async function ensureUser(db, id) {
 }
 
 
-/* TABLES */
+/* =========================
+   DATABASE TABLES
+========================= */
 
 async function createTables(db) {
 
@@ -285,9 +289,14 @@ async function createTables(db) {
 }
 
 
-/* MINING RELEASE */
+/* =========================
+   MINING RELEASE
+========================= */
 
-async function settleMining(db, id) {
+async function settleMining(
+  db,
+  id
+) {
 
   const rows =
     await db
@@ -369,7 +378,15 @@ async function settleMining(db, id) {
              created_at
            )
            VALUES
-           (?, 'MINING_RELEASE', ?, ?, 0, ?, ?)`
+           (
+             ?,
+             'MINING_RELEASE',
+             ?,
+             ?,
+             0,
+             ?,
+             ?
+           )`
         ).bind(
           id,
           total,
@@ -388,16 +405,20 @@ async function settleMining(db, id) {
 }
 
 
-/* STATE */
+/* =========================
+   STATE
+========================= */
 
-async function getState(db, id) {
+async function getState(
+  db,
+  id
+) {
 
   id =
     clean(id)
       .toLowerCase();
 
   if (!id) {
-
     throw new Error(
       "Chýba user_id."
     );
@@ -491,7 +512,9 @@ async function getState(db, id) {
 }
 
 
-/* REGISTER */
+/* =========================
+   REGISTER
+========================= */
 
 async function register(
   db,
@@ -577,6 +600,7 @@ async function register(
         ref.is_registered || 0
       ) !== 1
     ) {
+
       referrer = "";
     }
   }
@@ -652,14 +676,19 @@ async function register(
 
 
   return {
+
     user_id: id,
+
     referrer_id:
       referrer || null
+
   };
 }
 
 
-/* LOGIN */
+/* =========================
+   LOGIN
+========================= */
 
 async function login(
   db,
@@ -715,7 +744,9 @@ async function login(
 }
 
 
-/* BANK -> MINING */
+/* =========================
+   BANK -> MINING
+========================= */
 
 async function bankToMining(
   db,
@@ -798,7 +829,15 @@ async function bankToMining(
          created_at
        )
        VALUES
-       (?, 'BANK_TO_MINING', ?, ?, ?, ?, ?)`
+       (
+         ?,
+         'BANK_TO_MINING',
+         ?,
+         ?,
+         ?,
+         ?,
+         ?
+       )`
     ).bind(
       id,
       amount,
@@ -817,7 +856,9 @@ async function bankToMining(
 }
 
 
-/* START MINING */
+/* =========================
+   START MINING
+========================= */
 
 async function startMining(
   db,
@@ -933,7 +974,15 @@ async function startMining(
          created_at
        )
        VALUES
-       (?, 'MINING_START', ?, 0, ?, ?, ?)`
+       (
+         ?,
+         'MINING_START',
+         ?,
+         0,
+         ?,
+         ?,
+         ?
+       )`
     ).bind(
       id,
       amount,
@@ -963,7 +1012,9 @@ async function startMining(
 }
 
 
-/* WITHDRAW */
+/* =========================
+   WITHDRAW
+========================= */
 
 async function withdraw(
   db,
@@ -1094,7 +1145,15 @@ async function withdraw(
          created_at
        )
        VALUES
-       (?, 'WITHDRAWAL', ?, ?, 0, ?, ?)`
+       (
+         ?,
+         'WITHDRAWAL',
+         ?,
+         ?,
+         0,
+         ?,
+         ?
+       )`
     ).bind(
       id,
       amount,
@@ -1122,7 +1181,9 @@ async function withdraw(
 }
 
 
-/* AOYCO */
+/* =========================
+   AOYCO PTC
+========================= */
 
 async function aoycoPTC(
   request,
@@ -1137,6 +1198,7 @@ async function aoycoPTC(
     clean(
       env.AOYCO_API_KEY
     );
+
 
   const bearer =
     clean(
@@ -1203,6 +1265,7 @@ async function aoycoPTC(
       encodeURIComponent(ip),
       {
         method: "GET",
+
         headers: {
           "Authorization":
             "Bearer " + bearer
@@ -1222,30 +1285,50 @@ async function aoycoPTC(
     }),
     {
       status: response.status,
-      headers: {
-        "Content-Type":
-          "application/json; charset=UTF-8",
-        "Access-Control-Allow-Origin":
-          "*"
-      }
+
+      headers: corsHeaders()
     }
   );
 }
 
 
-/* MAIN */
+/* =========================
+   MAIN WORKER
+========================= */
 
 export default {
 
   async fetch(request, env) {
 
+    /*
+      DÔLEŽITÉ:
+      OPTIONS odpoveď NESMIE mať telo pri HTTP 204.
+      Toto opravuje "Failed to fetch" pri POST registrácii.
+    */
+
     if (
       request.method === "OPTIONS"
     ) {
 
-      return json(
-        {},
-        204
+      return new Response(
+        null,
+        {
+          status: 204,
+
+          headers: {
+            "Access-Control-Allow-Origin":
+              "*",
+
+            "Access-Control-Allow-Methods":
+              "GET,POST,OPTIONS",
+
+            "Access-Control-Allow-Headers":
+              "Content-Type",
+
+            "Access-Control-Max-Age":
+              "86400"
+          }
+        }
       );
     }
 
@@ -1280,7 +1363,9 @@ export default {
         "/";
 
 
-      /* ROOT */
+      /* =====================
+         ROOT
+      ===================== */
 
       if (path === "/") {
 
@@ -1295,13 +1380,15 @@ export default {
             "online",
 
           version:
-            "4.0"
+            "5.0"
 
         });
       }
 
 
-      /* REGISTER */
+      /* =====================
+         REGISTER
+      ===================== */
 
       if (
         path === "/api/register" &&
@@ -1328,7 +1415,9 @@ export default {
       }
 
 
-      /* LOGIN */
+      /* =====================
+         LOGIN
+      ===================== */
 
       if (
         path === "/api/login" &&
@@ -1354,7 +1443,9 @@ export default {
       }
 
 
-      /* STATE */
+      /* =====================
+         STATE
+      ===================== */
 
       if (
         path === "/api/state" &&
@@ -1378,7 +1469,9 @@ export default {
       }
 
 
-      /* BANK -> MINING */
+      /* =====================
+         BANK -> MINING
+      ===================== */
 
       if (
         path ===
@@ -1397,9 +1490,7 @@ export default {
           ...(
             await bankToMining(
               env.DB,
-              clean(
-                body.user_id
-              ),
+              body.user_id,
               body.amount_sats
             )
           )
@@ -1408,7 +1499,9 @@ export default {
       }
 
 
-      /* START MINING */
+      /* =====================
+         START MINING
+      ===================== */
 
       if (
         path ===
@@ -1427,9 +1520,7 @@ export default {
           ...(
             await startMining(
               env.DB,
-              clean(
-                body.user_id
-              ),
+              body.user_id,
               body.duration_days
             )
           )
@@ -1438,7 +1529,9 @@ export default {
       }
 
 
-      /* WITHDRAW */
+      /* =====================
+         WITHDRAW
+      ===================== */
 
       if (
         path === "/api/withdraw" &&
@@ -1456,9 +1549,7 @@ export default {
           ...(
             await withdraw(
               env.DB,
-              clean(
-                body.user_id
-              ),
+              body.user_id,
               body.amount_sats,
               body.method,
               body.address
@@ -1469,7 +1560,9 @@ export default {
       }
 
 
-      /* AOYCO PTC */
+      /* =====================
+         AOYCO PTC
+      ===================== */
 
       if (
         path ===
@@ -1484,7 +1577,9 @@ export default {
       }
 
 
-      /* UNKNOWN */
+      /* =====================
+         UNKNOWN ENDPOINT
+      ===================== */
 
       return json(
         {
@@ -1494,6 +1589,7 @@ export default {
         },
         404
       );
+
 
     } catch (error) {
 
