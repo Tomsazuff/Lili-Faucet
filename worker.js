@@ -1344,23 +1344,7 @@ function secureEqual(a, b) {
 
   return price;
 }
-  const response = await fetch(
-    "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
-  );
 
-  if (!response.ok) {
-    throw new Error("BTC/USDT kurz je dočasne nedostupný.");
-  }
-
-  const data = await response.json();
-  const price = Number(data?.price);
-
-  if (!Number.isFinite(price) || price <= 0) {
-    throw new Error("Neplatná BTC/USDT cena.");
-  }
-
-  return price;
-}
 async function octoClixPostback(request, env) {
   const secret = clean(env.OCTOCLIX_SECRET_KEY);
 
