@@ -1552,7 +1552,43 @@ await env.DB.batch([
 ========================= */
 
 export default {
+    if (
+      new URL(request.url).pathname === "/api/price" &&
+      request.method === "GET"
+    ) {
+      try {
+        const btcUsdt = await getBtcUsdtPrice();
 
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            btc_usdt: btcUsdt,
+            usdt_usd: 1
+          }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json; charset=UTF-8",
+              "Access-Control-Allow-Origin": "*"
+            }
+          }
+        );
+      } catch (error) {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: "BTC/USDT kurz je dočasne nedostupný."
+          }),
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "application/json; charset=UTF-8",
+              "Access-Control-Allow-Origin": "*"
+            }
+          }
+        );
+      }
+    }
   async fetch(request, env) {
 
     /*
