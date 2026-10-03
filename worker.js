@@ -1328,6 +1328,23 @@ function secureEqual(a, b) {
   return diff === 0;
 }async function getBtcUsdtPrice() {
   const response = await fetch(
+    "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+  );
+
+  if (!response.ok) {
+    throw new Error("BTC/USDT kurz je dočasne nedostupný.");
+  }
+
+  const data = await response.json();
+  const price = Number(data?.bitcoin?.usd);
+
+  if (!Number.isFinite(price) || price <= 0) {
+    throw new Error("Neplatná BTC/USDT cena.");
+  }
+
+  return price;
+}
+  const response = await fetch(
     "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
   );
 
