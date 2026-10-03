@@ -1447,7 +1447,7 @@ const user = await env.DB
   .prepare(
     `SELECT id
      FROM users
-     WHERE user_id = ?
+     WHERE id = ?
      LIMIT 1`
   )
   .bind(userId)
