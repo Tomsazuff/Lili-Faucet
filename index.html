@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="OctoClix" content="OfpEcaGSLU">
+<meta name="OctoClix" content="GxFFieoFLjvmcGDvTnwHYw7J">
 <title>Lili Faucet</title>
 
 <style>
@@ -132,6 +132,21 @@ pre{
   background:#f8fafc;
   color:#475569;
   font-size:14px;
+}
+
+.octo-frame{
+  margin-top:14px;
+  border-radius:12px;
+  overflow:hidden;
+  background:#f8fafc;
+}
+
+.octo-frame iframe{
+  display:block;
+  width:100%;
+  height:720px;
+  border:0;
+  max-width:900px;
 }
 </style>
 </head>
@@ -493,15 +508,28 @@ PTC ponuky sa načítajú cez Cloudflare Worker.
 
 <div class="card">
 
-<h2>🔌 OctoClick</h2>
+<h2>📺 OctoClix PTC / Offerwall</h2>
 
 <p>
-OctoClick je napojený cez Cloudflare Worker.
+Tu môžeš spustiť dostupné OctoClix PTC reklamy a ponuky.
 </p>
 
+<div class="octo-frame">
+
+<iframe
+id="octoOfferwall"
+src=""
+width="100%"
+height="720"
+style="border:0;max-width:900px;border-radius:12px;"
+sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox">
+</iframe>
+
+</div>
+
 <p class="muted">
-Odmeny z postbacku sa pripisujú do Banku v satoshi.
-Testovací postback sa neúčtuje.
+Odmeny z potvrdených postbackov sa automaticky
+pripisujú do Banku v satoshi.
 </p>
 
 </div>
@@ -527,6 +555,10 @@ localStorage.getItem("lili_currency") || "SAT";
 let btcUsdtPrice = 0;
 
 let priceInterval = null;
+
+
+const OCTOCLIX_SITE_KEY =
+"GxFFieoFLjvmcGDvTnwHYw7J";
 
 
 const RATES = {
@@ -905,6 +937,8 @@ function openApp(){
   showTab("bankTab");
 
   startPriceRefresh();
+
+  loadOctoClix();
 }
 
 
@@ -1383,6 +1417,27 @@ async function copyReferral(){
 
     alert(value);
   }
+}
+
+
+/* OCTOCLIX */
+
+function loadOctoClix(){
+
+  const frame =
+    $("octoOfferwall");
+
+  if(!frame || !userId)return;
+
+  frame.src =
+    "https://octoclix.com/ow/" +
+    encodeURIComponent(
+      OCTOCLIX_SITE_KEY
+    ) +
+    "/" +
+    encodeURIComponent(
+      userId
+    );
 }
 
 
